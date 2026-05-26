@@ -1,0 +1,4522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<title>越境コーチ — Embedded Exam Coach</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<!-- Fonts load from Google when online; fall back gracefully if blocked -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ===== Tokens ===== */
+:root {
+  --bg: oklch(0.985 0.003 85);
+  --bg-elev: oklch(0.995 0.002 85);
+  --surface: #ffffff;
+  --surface-2: oklch(0.975 0.004 85);
+  --border: oklch(0.91 0.005 85);
+  --border-strong: oklch(0.84 0.006 85);
+  --ink: oklch(0.21 0.008 80);
+  --ink-2: oklch(0.34 0.008 80);
+  --muted: oklch(0.52 0.008 80);
+  --faint: oklch(0.68 0.008 80);
+
+  --accent: oklch(0.55 0.10 200);
+  --accent-ink: oklch(0.36 0.10 200);
+  --accent-soft: oklch(0.95 0.022 200);
+  --accent-border: oklch(0.86 0.045 200);
+
+  --ok: oklch(0.6 0.11 150);
+  --ok-soft: oklch(0.95 0.025 150);
+  --warn: oklch(0.7 0.13 75);
+  --warn-soft: oklch(0.96 0.04 80);
+  --danger: oklch(0.58 0.16 25);
+  --danger-soft: oklch(0.96 0.025 25);
+
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+
+  --shadow-1: 0 1px 0 rgba(20, 20, 20, 0.03), 0 1px 2px rgba(20, 20, 20, 0.04);
+  --shadow-2: 0 4px 14px rgba(20, 20, 20, 0.06), 0 1px 2px rgba(20, 20, 20, 0.04);
+
+  --sans: "Noto Sans JP", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, monospace;
+  --serif: "Noto Serif JP", Georgia, "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "palt" 1;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* numbers + japanese friendly */
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ===== Layout ===== */
+.app {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: var(--bg-elev);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 18px;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--ink);
+  color: var(--bg);
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.brand-name {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.brand-sub {
+  font-size: 10.5px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.nav-section {
+  margin-top: 14px;
+}
+
+.nav-section h6 {
+  margin: 0 8px 6px;
+  font-size: 10px;
+  color: var(--faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
+  font-size: 13px;
+  cursor: pointer;
+  margin: 1px 0;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+
+.nav-item:hover {
+  background: var(--surface-2);
+}
+
+.nav-item.active {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.nav-item.active .nav-tag {
+  background: rgba(255,255,255,0.18);
+  color: var(--bg);
+}
+
+.nav-tag {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 1px 6px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  color: var(--muted);
+}
+
+.nav-glyph {
+  width: 18px;
+  display: grid;
+  place-items: center;
+  color: currentColor;
+  opacity: 0.85;
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  padding: 12px 8px 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-soft), var(--surface-2));
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  color: var(--accent-ink);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* ===== Main ===== */
+.main {
+  padding: 28px 40px 80px;
+  max-width: 1280px;
+  width: 100%;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 24px;
+}
+
+.page-head-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.page-head-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.page-head h1 {
+  margin: 0 0 4px;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.page-head .crumb {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.page-head .sub {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+/* ===== Cards ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 18px;
+}
+
+.card.tight {
+  padding: 14px;
+}
+
+.card.flat {
+  background: var(--surface-2);
+  border-color: transparent;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.card-head h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+.card-head .sub {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* Grid helpers */
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* ===== Badges / chips ===== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  border: 1px solid var(--border);
+  letter-spacing: 0.02em;
+}
+
+.chip.accent {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent-ink);
+}
+.chip.ok { background: var(--ok-soft); border-color: oklch(0.85 0.05 150); color: oklch(0.4 0.1 150); }
+.chip.warn { background: var(--warn-soft); border-color: oklch(0.86 0.06 80); color: oklch(0.42 0.11 70); }
+.chip.danger { background: var(--danger-soft); border-color: oklch(0.84 0.07 25); color: oklch(0.4 0.14 25); }
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  display: inline-block;
+}
+.dot.accent { background: var(--accent); }
+.dot.ok { background: var(--ok); }
+.dot.warn { background: var(--warn); }
+.dot.danger { background: var(--danger); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.btn:hover {
+  background: var(--surface-2);
+}
+
+.btn.primary {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.btn.primary:hover {
+  background: oklch(0.28 0.01 80);
+}
+
+.btn.accent {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn.ghost {
+  border-color: transparent;
+  background: transparent;
+}
+
+.btn.sm {
+  height: 26px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
+/* ===== Progress ===== */
+.bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.bar > div {
+  height: 100%;
+  background: var(--ink);
+  border-radius: inherit;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.kpi .val {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.kpi .val .unit {
+  font-size: 13px;
+  color: var(--muted);
+  margin-left: 3px;
+  font-weight: 400;
+}
+.kpi .label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.kpi .delta {
+  font-size: 11px;
+  color: var(--ok);
+  font-family: var(--mono);
+}
+.kpi .delta.down { color: var(--danger); }
+.kpi .delta.flat { color: var(--muted); }
+
+/* ===== Task list ===== */
+.task {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  align-items: flex-start;
+}
+.task:first-child {
+  border-top: none;
+}
+.check {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-strong);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  background: var(--surface);
+  margin-top: 2px;
+}
+.check.done {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.check.done svg { display: block; }
+.check svg { display: none; }
+
+.task .body { flex: 1; min-width: 0; }
+.task .title {
+  font-size: 13.5px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.task .meta {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.task.done .title { color: var(--muted); text-decoration: line-through; }
+
+.subj-tag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  border: 1px solid var(--border);
+}
+.subj-tag.a2 { background: oklch(0.97 0.018 250); border-color: oklch(0.88 0.04 250); color: oklch(0.4 0.1 250); }
+.subj-tag.b1 { background: oklch(0.96 0.025 130); border-color: oklch(0.85 0.06 130); color: oklch(0.38 0.1 130); }
+.subj-tag.b2 { background: oklch(0.96 0.03 50); border-color: oklch(0.85 0.07 50); color: oklch(0.42 0.13 50); }
+
+/* ===== Coach chat ===== */
+.coach {
+  background: linear-gradient(180deg, var(--accent-soft) 0%, var(--surface) 60%);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--r-lg);
+  padding: 18px 18px 16px;
+}
+.coach-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.coach-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: var(--serif);
+}
+.coach-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+.coach-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+.coach-msg {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.coach-msg em { font-style: normal; background: oklch(0.97 0.04 80); padding: 0 4px; border-radius: 3px; }
+.coach-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+/* ===== Table-like ===== */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.tbl th, .tbl td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.tbl th {
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tbl td.num { font-family: var(--mono); }
+
+/* ===== Card schedule grid (A-2) ===== */
+.cardgrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.daycell {
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 8px 9px;
+  min-height: 78px;
+  border: 1px solid transparent;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.daycell.today {
+  background: var(--surface);
+  border-color: var(--ink);
+}
+.daycell.sunday {
+  background: oklch(0.97 0.005 80);
+}
+.daycell.future {
+  opacity: 0.55;
+}
+.daycell-date {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+}
+.daycell-date .dow { color: var(--faint); }
+.daycell.sunday .dow { color: var(--warn); }
+
+.minicard {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  display: inline-block;
+}
+.minicard.new {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+  font-weight: 600;
+}
+.minicard.rev-1 { background: oklch(0.93 0.04 200); color: oklch(0.32 0.1 200); border-color: oklch(0.82 0.06 200); }
+.minicard.rev-2 { background: oklch(0.93 0.05 200); }
+.minicard.rev-3 { background: oklch(0.91 0.06 200); }
+
+/* ===== Pomodoro / timer ===== */
+.timer-ring {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+.timer-time {
+  font-family: var(--mono);
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  flex-direction: column;
+}
+.timer-time small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 6px;
+  font-weight: 400;
+}
+
+/* ===== Heatmap (B-2 progress) ===== */
+.heat {
+  display: grid;
+  gap: 3px;
+}
+.heat-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--surface-2);
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+.heat-cell.l1 { background: oklch(0.93 0.03 200); border-color: oklch(0.85 0.04 200); }
+.heat-cell.l2 { background: oklch(0.86 0.06 200); border-color: oklch(0.78 0.08 200); }
+.heat-cell.l3 { background: oklch(0.74 0.1 200); border-color: oklch(0.68 0.11 200); }
+.heat-cell.l4 { background: oklch(0.55 0.11 200); border-color: oklch(0.5 0.11 200); }
+.heat-cell.done { background: var(--ink); border-color: var(--ink); }
+
+/* ===== Misc ===== */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 14px 0;
+}
+
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+
+.scroll-area {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+/* timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--border);
+}
+.tl-item {
+  display: flex;
+  gap: 14px;
+  padding: 10px 0;
+  position: relative;
+}
+.tl-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  margin-left: 8px;
+  margin-top: 6px;
+  flex-shrink: 0;
+  z-index: 1;
+}
+.tl-dot.now {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.tl-dot.done {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+/* segmented */
+.seg {
+  display: inline-flex;
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 2px;
+  border: 1px solid var(--border);
+}
+.seg button {
+  border: none;
+  background: transparent;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.seg button.on {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-1);
+}
+
+.linkish {
+  color: var(--accent-ink);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--accent-border);
+  cursor: pointer;
+}
+
+/* ===== Stat row (4-col stat group with separators) ===== */
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+}
+.stat-row .stat-cell + .stat-cell {
+  border-left: 1px solid var(--border);
+  padding-left: 18px;
+}
+.stat-cell { min-width: 0; }
+
+/* ===== B2 themes row ===== */
+.b2-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr 280px;
+  gap: 14px;
+  align-items: center;
+}
+.b2-dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+/* ===== Card schedule year matrix ===== */
+.ymatrix-scroll { width: 100%; }
+.ymatrix-inner { min-width: 0; }
+
+/* ===== Card-head with wrappable nav ===== */
+.card-head.card-head-wrap {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+
+/* phase strip */
+.phase-strip {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+.phase-cell {
+  background: var(--surface-2);
+  border-radius: 4px;
+  padding: 8px 6px;
+  font-size: 10.5px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px solid transparent;
+  position: relative;
+}
+.phase-cell.done {
+  background: oklch(0.94 0.02 80);
+  color: var(--ink-2);
+}
+.phase-cell.now {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.phase-cell .month {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  display: block;
+  opacity: 0.7;
+}
+
+/* Star rating-like cell for review */
+.review-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(4, 1fr) 60px;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.review-grid > div {
+  background: var(--surface);
+  padding: 9px 10px;
+  font-size: 12px;
+}
+.review-grid > div.head {
+  background: var(--surface-2);
+  font-size: 10.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+/* Tweak: density */
+body.compact .main { padding: 20px 28px 60px; }
+body.compact .card { padding: 14px; }
+body.compact .page-head { margin-bottom: 16px; }
+
+/* =====================================================================
+   Responsive — mobile & tablet
+   ===================================================================== */
+
+/* Tablet: shrink sidebar a bit */
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 200px 1fr; }
+  .main { padding: 24px 28px 80px; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  html, body { font-size: 15px; }
+
+  /* Layout: sidebar moves to bottom as a tab bar */
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 100dvh;
+  }
+
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    height: auto;
+    flex-direction: row;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+    border-right: none;
+    border-top: 1px solid var(--border);
+    background: var(--bg-elev);
+    z-index: 50;
+    gap: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: space-around;
+  }
+
+  .sidebar .brand,
+  .sidebar .sidebar-foot,
+  .sidebar .nav-section h6 {
+    display: none;
+  }
+
+  .sidebar .nav-section {
+    margin: 0;
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+  }
+
+  .sidebar .nav-section + .nav-section {
+    border-left: 1px solid var(--border);
+    margin-left: 2px;
+    padding-left: 2px;
+  }
+
+  .nav-item {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 6px;
+    min-width: 52px;
+    font-size: 10px;
+    margin: 0;
+    border-radius: 8px;
+    min-height: 48px;
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+    letter-spacing: 0;
+  }
+  .nav-item .nav-glyph { width: auto; }
+  .nav-item .nav-tag { display: none; }
+  .nav-item > span:nth-of-type(1) { /* icon */ }
+  .nav-item > span:nth-of-type(2) {
+    /* shrink the label slightly for fit */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 64px;
+  }
+
+  /* Main: full width, smaller padding, leave room for bottom nav */
+  .main {
+    padding: 18px 16px calc(80px + env(safe-area-inset-bottom));
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* Page header: stack title + actions */
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .page-head h1 { font-size: 22px; }
+  .page-head .sub { font-size: 12.5px; max-width: 100%; }
+  .page-head-right {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .page-head-right > div {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .page-head-right .btn { min-height: 40px; }
+  .page-head-right .seg { flex-wrap: wrap; }
+
+  /* Cards: tighter */
+  .card { padding: 14px; border-radius: 10px; }
+  .card.tight { padding: 12px; }
+
+  /* Stack all row layouts */
+  .row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch !important; /* override inline alignItems:flex-start so cols don't size to content */
+  }
+  .col { gap: 12px; min-width: 0; }
+  .col[style*="min-width"] { min-width: 0 !important; }
+
+  /* Grids → fewer cols */
+  .grid-2 { grid-template-columns: 1fr; gap: 10px; }
+  .grid-3 { grid-template-columns: 1fr; gap: 10px; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+  /* Touch targets: 44px min for primary controls */
+  .btn { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+  .btn.sm { min-height: 32px; font-size: 13px; padding: 0 10px; }
+  .btn.primary, .btn.accent { min-height: 44px; }
+
+  .check {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+  }
+
+  /* KPIs: scale down */
+  .kpi .val { font-size: 22px; }
+  .kpi .val .unit { font-size: 11.5px; }
+
+  /* Card schedule grid: keep 7 cols but allow horizontal scroll wrapper */
+  .cardgrid-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -14px;
+    padding: 0 14px;
+  }
+  .cardgrid {
+    gap: 4px;
+    min-width: 560px;
+  }
+  .daycell {
+    min-height: 64px;
+    padding: 6px;
+  }
+  .minicard {
+    font-size: 9.5px;
+    padding: 1px 3px;
+  }
+
+  /* Tables → horizontal scroll */
+  .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px; padding: 0 16px; }
+  .tbl { min-width: 480px; }
+
+  /* Weekly KPI table — wrap it so it scrolls instead of busting card */
+  .card > .tbl {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .card > .tbl thead, .card > .tbl tbody { display: table; width: 100%; min-width: 460px; }
+
+  /* Review grid: stack rows as cards instead of crammed 2-col */
+  .review-grid {
+    grid-template-columns: 1fr;
+    background: transparent;
+    border: none;
+    gap: 8px;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .review-grid > div {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .review-grid > div.head { display: none; }
+  /* label-row gets emphasis */
+  .review-grid > div:nth-child(6n + 7) {
+    margin-top: 8px;
+    background: var(--surface-2);
+    font-weight: 500;
+  }
+  /* week cells: render as inline rows with label */
+  .review-grid > div:nth-child(6n + 8)::before { content: "第1週: "; color: var(--muted); font-family: var(--sans); }
+  .review-grid > div:nth-child(6n + 9)::before { content: "第2週: "; color: var(--muted); font-family: var(--sans); }
+  .review-grid > div:nth-child(6n + 10)::before { content: "第3週: "; color: var(--muted); font-family: var(--sans); }
+  .review-grid > div:nth-child(6n + 11)::before { content: "今週: "; color: var(--muted); font-family: var(--sans); font-weight: 500; }
+  .review-grid > div:nth-child(6n + 12)::before { content: "傾向: "; color: var(--muted); font-family: var(--sans); }
+  .review-grid > div[style*="text-align: right"] { text-align: left !important; }
+  .review-grid > div[style*="place-items: center"] {
+    place-items: start !important;
+    justify-content: start !important;
+    display: flex !important;
+    gap: 6px;
+  }
+
+  /* Phase strip → horizontal scroll */
+  .phase-strip {
+    overflow-x: auto;
+    grid-template-columns: repeat(9, minmax(72px, 1fr));
+    -webkit-overflow-scrolling: touch;
+    margin: 8px -16px 0;
+    padding: 0 16px 4px;
+  }
+
+  /* Timer ring: smaller */
+  .timer-ring { width: 160px; height: 160px; }
+  .timer-time { font-size: 30px; }
+
+  /* Coach card: tighter */
+  .coach { padding: 14px; }
+  .coach-msg { font-size: 13px; }
+
+  /* Task list: more spacious */
+  .task { padding: 12px 0; gap: 10px; }
+  .task .title { font-size: 14.5px; }
+  .task .meta { font-size: 12px; gap: 8px; }
+
+  /* Sidebar items: hover does nothing on touch — boost active state */
+  .nav-item:hover { background: transparent; }
+  .nav-item.active { background: var(--ink); color: var(--bg); }
+
+  /* Long text: prevent overflow */
+  h1, h2, h3 { word-break: break-word; overflow-wrap: anywhere; }
+
+  /* ===== Stat-row: wrap into 2x2 grid on mobile, drop dividers ===== */
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+  }
+  .stat-row .stat-cell + .stat-cell {
+    border-left: none;
+    padding-left: 0;
+  }
+
+  /* ===== B2 row: stack rows, theme on top, dots full width below ===== */
+  .b2-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px 0;
+    align-items: stretch;
+  }
+  .b2-row .b2-meta {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .b2-row .b2-dots {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .b2-row .b2-dots > div { min-width: 22px; }
+
+  /* ===== Card-head: wrap actions ===== */
+  .card-head {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .card-head h3 { font-size: 14px; }
+
+  /* ===== Problem screen: reduce padding ===== */
+  .problem-card { padding: 16px !important; }
+  .problem-card .action-bar { gap: 8px; }
+  .problem-card .action-bar .muted { width: 100%; order: -1; text-align: left; }
+
+  /* Choices: smaller padding */
+  .problem-card button[disabled],
+  .problem-card button:not([disabled]) {
+    /* tighter buttons inside choices, no-op fallback */
+  }
+
+  /* ===== Year matrix: shrink + horizontal scroll if too narrow ===== */
+  .ymatrix-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -14px;
+    padding: 0 14px;
+  }
+  .ymatrix-inner { min-width: 360px; }
+
+  /* ===== B-1 grid in pastexams: smaller cells ===== */
+
+  /* Tweaks panel: full-width on mobile */
+  body.compact .main { padding: 16px 14px 80px; }
+
+  /* Section headings inline-segment wrap */
+  .seg {
+    flex-wrap: wrap;
+  }
+
+  /* Inline forms */
+  textarea, input[type="number"], input[type="text"] {
+    font-size: 15px; /* prevent ios zoom */
+  }
+
+  /* Strong corner: keep coach actions wrappy */
+  .coach-actions { gap: 6px; }
+  .coach-actions .btn { font-size: 12px; padding: 6px 10px; min-height: 36px; }
+}
+
+/* Narrow phones */
+@media (max-width: 380px) {
+  .main { padding: 14px 12px calc(80px + env(safe-area-inset-bottom)); }
+  .page-head h1 { font-size: 20px; }
+  .grid-4 { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .nav-item { min-width: 48px; padding: 5px 4px; font-size: 9.5px; }
+  .nav-item > span:nth-of-type(2) { max-width: 52px; }
+  /* Stat row: revert to single column on very narrow screens */
+  .stat-row { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+<body style="background-color: rgb(255, 255, 255); font-family: &quot;Noto Sans JP&quot;">
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+// ===== tweaks-panel =====
+
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "palette": ["#D97757", "#29261b", "#f6f4ef"],
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        options={['#D97757', '#2A6FDB', '#1F8A5B', '#7A5AE0']}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakColor  label="Palette" value={t.palette}
+//                        options={[['#D97757', '#29261b', '#f6f4ef'],
+//                                  ['#475569', '#0f172a', '#f1f5f9']]}
+//                        onChange={(v) => setTweak('palette', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    transform:scale(var(--dc-inv-zoom,1));transform-origin:bottom right;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+
+  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+
+  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+
+  .twk-chips{display:flex;gap:6px}
+  .twk-chip{position:relative;appearance:none;flex:1;min-width:0;height:46px;
+    padding:0;border:0;border-radius:6px;overflow:hidden;cursor:default;
+    box-shadow:0 0 0 .5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.06);
+    transition:transform .12s cubic-bezier(.3,.7,.4,1),box-shadow .12s}
+  .twk-chip:hover{transform:translateY(-1px);
+    box-shadow:0 0 0 .5px rgba(0,0,0,.18),0 4px 10px rgba(0,0,0,.12)}
+  .twk-chip[data-on="1"]{box-shadow:0 0 0 1.5px rgba(0,0,0,.85),
+    0 2px 6px rgba(0,0,0,.15)}
+  .twk-chip>span{position:absolute;top:0;bottom:0;right:0;width:34%;
+    display:flex;flex-direction:column;box-shadow:-1px 0 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i{flex:1;box-shadow:0 -1px 0 rgba(0,0,0,.1)}
+  .twk-chip>span>i:first-child{box-shadow:none}
+  .twk-chip svg{position:absolute;top:6px;left:6px;width:13px;height:13px;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))}
+`;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+    // Same-window signal so in-page listeners (deck-stage rail thumbnails)
+    // can react — the parent message only reaches the host, not peers.
+    window.dispatchEvent(new CustomEvent('tweakchange', { detail: edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-omelette-chrome=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">
+          {children}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  // Segments wrap mid-word once per-segment width runs out. The track is
+  // ~248px (280 panel − 28 body pad − 4 seg pad), each button loses 12px
+  // to its own padding, and 11.5px system-ui averages ~6.3px/char — so 2
+  // options fit ~16 chars each, 3 fit ~10. Past that (or >3 options), fall
+  // back to a dropdown rather than wrap.
+  const labelLen = (o) => String(typeof o === 'object' ? o.label : o).length;
+  const maxLen = options.reduce((m, o) => Math.max(m, labelLen(o)), 0);
+  const fitsAsSegments = maxLen <= ({ 2: 16, 3: 10 }[options.length] ?? 0);
+  if (!fitsAsSegments) {
+    // <select> emits strings — map back to the original option value so the
+    // fallback stays type-preserving (numbers, booleans) like the segment path.
+    const resolve = (s) => {
+      const m = options.find((o) => String(typeof o === 'object' ? o.value : o) === s);
+      return m === undefined ? s : typeof m === 'object' ? m.value : m;
+    };
+    return <TweakSelect label={label} value={value} options={options}
+                        onChange={(s) => onChange(resolve(s))} />;
+  }
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+// Relative-luminance contrast pick — checkmarks drawn over a swatch need to
+// read on both #111 and #fafafa without per-option configuration. Hex input
+// only (#rgb / #rrggbb); named or rgb()/hsl() colors fall through to "light".
+function __twkIsLight(hex) {
+  const h = String(hex).replace('#', '');
+  const x = h.length === 3 ? h.replace(/./g, (c) => c + c) : h.padEnd(6, '0');
+  const n = parseInt(x.slice(0, 6), 16);
+  if (Number.isNaN(n)) return true;
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return r * 299 + g * 587 + b * 114 > 148000;
+}
+
+const __TwkCheck = ({ light }) => (
+  <svg viewBox="0 0 14 14" aria-hidden="true">
+    <path d="M3 7.2 5.8 10 11 4.2" fill="none" strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+          stroke={light ? 'rgba(0,0,0,.78)' : '#fff'} />
+  </svg>
+);
+
+// TweakColor — curated color/palette picker. Each option is either a single
+// hex string or an array of 1-5 hex strings; the card adapts — a lone color
+// renders solid, a palette renders colors[0] as the hero (left ~2/3) with the
+// rest stacked in a sharp column on the right. onChange emits the
+// option in the shape it was passed (string stays string, array stays array).
+// Without options it falls back to the native color input for back-compat.
+function TweakColor({ label, value, options, onChange }) {
+  if (!options || !options.length) {
+    return (
+      <div className="twk-row twk-row-h">
+        <div className="twk-lbl"><span>{label}</span></div>
+        <input type="color" className="twk-swatch" value={value}
+               onChange={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  // Native <input type=color> emits lowercase hex per the HTML spec, so
+  // compare case-insensitively. String() guards JSON.stringify(undefined),
+  // which returns the primitive undefined (no .toLowerCase).
+  const key = (o) => String(JSON.stringify(o)).toLowerCase();
+  const cur = key(value);
+  return (
+    <TweakRow label={label}>
+      <div className="twk-chips" role="radiogroup">
+        {options.map((o, i) => {
+          const colors = Array.isArray(o) ? o : [o];
+          const [hero, ...rest] = colors;
+          const sup = rest.slice(0, 4);
+          const on = key(o) === cur;
+          return (
+            <button key={i} type="button" className="twk-chip" role="radio"
+                    aria-checked={on} data-on={on ? '1' : '0'}
+                    aria-label={colors.join(', ')} title={colors.join(' · ')}
+                    style={{ background: hero }}
+                    onClick={() => onChange(o)}>
+              {sup.length > 0 && (
+                <span>
+                  {sup.map((c, j) => <i key={j} style={{ background: c }} />)}
+                </span>
+              )}
+              {on && <__TwkCheck light={__twkIsLight(hero)} />}
+            </button>
+          );
+        })}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+Object.assign(window, {
+  useTweaks, TweaksPanel, TweakSection, TweakRow,
+  TweakSlider, TweakToggle, TweakRadio, TweakSelect,
+  TweakText, TweakNumber, TweakColor, TweakButton,
+});
+
+
+// ===== data =====
+// ===== Mock data based on the user's plan =====
+// 試験日: 2027年2月15日 (推定)
+// 今日: 2026年5月25日 (月) = 計画開始から想定3週目あたり
+
+const EXAM_DATE = new Date(2027, 1, 15); // Feb 15, 2027
+const TODAY = new Date(2026, 4, 25); // May 25, 2026 (Mon)
+const START_DATE = new Date(2026, 4, 11); // May 11, 2026 — plan day 1
+
+function daysBetween(a, b) {
+  return Math.round((b - a) / 86400000);
+}
+
+const DAYS_TO_EXAM = daysBetween(TODAY, EXAM_DATE);
+const DAY_IDX = daysBetween(START_DATE, TODAY); // current plan day, 0-indexed
+const TOTAL_DAYS = 228;
+
+// ----- 科目A-2 card schedule -----
+// 通し番号 → 年度・問
+function cardToProblem(c) {
+  const year = 2010 + Math.floor((c - 1) / 25);
+  const q = ((c - 1) % 25) + 1;
+  return { year, q };
+}
+
+// Card c introduction day (1-indexed):  D(c) = 7*floor((c-1)/6) + ((c-1)%6) + 1
+function introDay(c) {
+  return 7 * Math.floor((c - 1) / 6) + ((c - 1) % 6) + 1;
+}
+
+// Card c appears on days: D, D+1, D+3, D+7, D+15, D+31, D+63, ...
+function appearancesForCard(c) {
+  const D = introDay(c);
+  const out = [];
+  for (let k = 0; k < 8; k++) {
+    out.push({ day: D + (Math.pow(2, k) - 1), rep: k });
+  }
+  return out;
+}
+
+// On a given day (1-indexed), what cards appear?
+function cardsOnDay(day) {
+  // try cards c such that some appearance == day
+  const result = [];
+  // intro day <= day
+  const maxC = Math.min(6 * Math.ceil(day / 7), 25 * 16); // safe upper bound
+  for (let c = 1; c <= maxC; c++) {
+    const D = introDay(c);
+    if (D > day) continue;
+    const diff = day - D;
+    // diff must be (2^k - 1)
+    for (let k = 0; k < 12; k++) {
+      const expected = Math.pow(2, k) - 1;
+      if (expected === diff) {
+        result.push({ c, rep: k, intro: k === 0 });
+        break;
+      }
+      if (expected > diff) break;
+    }
+  }
+  // sort: intro last (rule §5.1③), 古い順 first
+  result.sort((a, b) => {
+    if (a.intro !== b.intro) return a.intro ? 1 : -1;
+    return a.c - b.c;
+  });
+  return result;
+}
+
+// ----- 科目B-1 -----
+const B1_YEARS = [
+  { era: "平成22", year: 2010, season: "春" },
+  { era: "平成23", year: 2011, season: "春" },
+  { era: "平成24", year: 2012, season: "春" },
+  { era: "平成25", year: 2013, season: "春" },
+  { era: "平成26", year: 2014, season: "春" },
+  { era: "平成27", year: 2015, season: "春" },
+  { era: "平成28", year: 2016, season: "春" },
+  { era: "平成29", year: 2017, season: "春" },
+  { era: "平成30", year: 2018, season: "春" },
+  { era: "平成31", year: 2019, season: "春" },
+  { era: "令和2", year: 2020, season: "10月" },
+  { era: "令和3", year: 2021, season: "春" },
+  { era: "令和4", year: 2022, season: "春" },
+  { era: "令和5", year: 2023, season: "春" },
+  { era: "令和6", year: 2024, season: "春" },
+  { era: "令和7", year: 2025, season: "春" },
+];
+
+// ----- 科目B-2 -----
+const B2_THEMES = [
+  { era: "平成21年度秋期", year: 2009, q: 3, theme: "組込みシステムにおける適切な外部調達について", group: "SA" },
+  { era: "平成22年度秋期", year: 2010, q: 3, theme: "組込みシステム開発におけるハードウェアとソフトウェアとの機能分担について", group: "SA" },
+  { era: "平成23年度秋期", year: 2011, q: 3, theme: "組込みシステムの開発におけるプラットフォームの導入について", group: "SA" },
+  { era: "平成24年度秋期", year: 2012, q: 3, theme: "組込みシステムの開発プロセスモデルについて", group: "SA" },
+  { era: "平成25年度秋期", year: 2013, q: 3, theme: "組込みシステムの開発における信頼性設計について", group: "SA" },
+  { era: "平成26年度秋期", year: 2014, q: 3, theme: "組込みシステムの開発における機能分割について", group: "SA" },
+  { era: "平成27年度秋期", year: 2015, q: 3, theme: "組込みシステム製品を構築する際のモジュール間インタフェースの仕様決定について", group: "SA" },
+  { era: "平成28年度秋期", year: 2016, q: 3, theme: "組込みシステムにおけるオープンソースソフトウェアの導入について", group: "SA" },
+  { era: "平成29年度秋期", year: 2017, q: 3, theme: "IoTの進展と組込みシステムのセキュリティ対応について", group: "SA" },
+  { era: "平成30年度秋期", year: 2018, q: 3, theme: "組込みシステムのAI利用、IoT化などに伴うデータ量増加への対応について", group: "SA" },
+  { era: "令和元年度秋期", year: 2019, q: 3, theme: "組込みシステムのデバッグモニタ機能について", group: "SA" },
+  { era: "令和3年度春期", year: 2021, q: 3, theme: "IoTの普及に伴う組込みシステムのネットワーク化について", group: "SA" },
+  { era: "令和4年度春期", year: 2022, q: 3, theme: "IoT, AIなどの技術進展に伴う組込みシステムの自動化について", group: "SA" },
+  { era: "令和5年度春期", year: 2023, q: 3, theme: "再利用の容易化を考慮した組込みシステムのアーキテクチャについて", group: "SA" },
+  { era: "令和5年度春期", year: 2023, q: 1, theme: "組込みシステムの製品企画段階における脅威分析", group: "ES" },
+  { era: "令和5年度春期", year: 2023, q: 2, theme: "組込みシステムにおけるマルチコアの利用", group: "ES" },
+  { era: "令和5年度春期", year: 2023, q: 3, theme: "組込みシステム開発時の基本要素の選定・設計・評価", group: "ES" },
+  { era: "令和6年度春期", year: 2024, q: 1, theme: "組込みシステム製品の企画における生産形態の多様性", group: "ES" },
+  { era: "令和6年度春期", year: 2024, q: 2, theme: "組込みシステム製品の設計における実現性の検証・試作などの事前検証", group: "ES" },
+  { era: "令和6年度春期", year: 2024, q: 3, theme: "組込みシステム製品における保守業務を支援する機能・構造の開発", group: "ES" },
+  { era: "令和7年度春期", year: 2025, q: 1, theme: "新市場に対する組み込みシステムの製品企画におけるマーケティング戦略について", group: "ES" },
+  { era: "令和7年度春期", year: 2025, q: 2, theme: "組み込みシステム製品の流用設計について", group: "ES" },
+  { era: "令和7年度春期", year: 2025, q: 3, theme: "組み込みシステム製品における入出力インタフェースの開発について", group: "ES" },
+];
+
+const B2_KOSUU_LABELS = [
+  "状況組み立て1", "状況組み立て2", "状況組み立て3", "状況組み立て4",
+  "状況組み立て5", "状況組み立て6", "状況組み立て7",
+  "設問1", "設問2", "設問3",
+];
+
+// ----- Today (Day 15 = May 25, 2026, Mon) -----
+// Day 15 — Week 3, Monday
+// A-2 schedule on day 15: card 15 intro, plus reviews
+const TODAY_DAY_NUMBER = DAY_IDX + 1; // 1-indexed
+
+// ----- Streak / weekly KPI mock -----
+const STREAK = 14;
+const WEEKLY_KPI = {
+  a2_jisshi: 0.96,        // 実施率
+  a2_shoken: 0.74,        // 初見正答率
+  a2_review: 0.88,        // 復習正答率
+  b1_seitou: 0.66,
+  b1_time: 48,            // 分/問
+  b2_kantou: 1.0,         // 完答率
+  study_time_min: 28 * 7 + 18, // 約 14h 程度
+};
+
+const WEEKLY_TREND = [
+  { w: "4/27週", a2_new: 0.55, a2_rev: 0.78, b1: 0.50, time: 720 },
+  { w: "5/4週",  a2_new: 0.62, a2_rev: 0.82, b1: 0.55, time: 760 },
+  { w: "5/11週", a2_new: 0.70, a2_rev: 0.86, b1: 0.60, time: 820 },
+  { w: "5/18週", a2_new: 0.74, a2_rev: 0.88, b1: 0.66, time: 854 },
+];
+
+// ----- Weak point map -----
+const WEAK_MAP = [
+  { id: 1, topic: "割り込み処理（優先度・ネスト）", subject: "B-1", status: "improving", note: "3週前から正答率上昇" },
+  { id: 2, topic: "リアルタイムスケジューリング (RM/EDF)", subject: "A-2", status: "active", note: "初見50%・復習70%" },
+  { id: 3, topic: "メモリマップとMMU", subject: "A-2", status: "resolved", note: "3問連続正答" },
+  { id: 4, topic: "セキュア・ブート / TPM", subject: "B-2", status: "todo", note: "H29 問3 で頻出" },
+  { id: 5, topic: "通信プロトコル (CAN/SPI/I2C)", subject: "B-1", status: "improving", note: "" },
+  { id: 6, topic: "FPGA 設計（HDLとタイミング制約）", subject: "A-2", status: "todo", note: "学習着手前" },
+  { id: 7, topic: "字数配分（設問ウの拡張論述）", subject: "B-2", status: "active", note: "完答できても評価Bが続く" },
+];
+
+// ----- Mistake categories -----
+const MISTAKE_LOG = [
+  { week: "5/18週", knowledge: 3, understanding: 5, careless: 2 },
+  { week: "5/11週", knowledge: 4, understanding: 4, careless: 3 },
+  { week: "5/4週",  knowledge: 6, understanding: 3, careless: 4 },
+  { week: "4/27週", knowledge: 7, understanding: 4, careless: 3 },
+];
+
+// ----- Annual phase strip -----
+const PHASES = [
+  { m: "MAY", label: "計画始動", start: "5/11", status: "now" },
+  { m: "JUN", label: "基礎構築", start: "6/1", status: "future" },
+  { m: "JUL", label: "B-2加速", start: "7/1", status: "future" },
+  { m: "AUG", label: "中間棚卸", start: "8/1", status: "future" },
+  { m: "SEP", label: "応用深化", start: "9/1", status: "future" },
+  { m: "OCT", label: "演習集中", start: "10/1", status: "future" },
+  { m: "NOV", label: "弱点撲滅", start: "11/1", status: "future" },
+  { m: "DEC", label: "通し演習", start: "12/1", status: "future" },
+  { m: "JAN", label: "直前総仕上げ", start: "1/1", status: "future" },
+];
+
+// ----- B-2 progress (per theme × 10工数) -----
+// Generate a plausible progress state. Each theme has 10 phases (0..9).
+const B2_PROGRESS = B2_THEMES.map((t, idx) => {
+  // We're 15 days in. B-2 daily. So ~15 工数 consumed.
+  // First theme nearly complete, second a bit.
+  let done = 0;
+  if (idx === 0) done = 10;
+  else if (idx === 1) done = 5;
+  else done = 0;
+  return { ...t, done };
+});
+
+// ----- B-1 progress -----
+// Sessions occur Tue/Thu/Sat. From May 11 (Mon) over ~2 weeks (14 days):
+// Tue 5/12 → Y0 Q1; Thu 5/14 → Y0 Q2; Sat 5/16 → Y1 Q1; Tue 5/19 → Y1 Q2; Thu 5/21 → Y2 Q1; Sat 5/23 → Y2 Q2
+// Today 5/25 (Mon) = no B-1 yet (Tue is 5/26)
+const B1_PROGRESS_SELECTED = [
+  { yearIdx: 0, q: 1, status: "done", score: 0.75 },
+  { yearIdx: 0, q: 2, status: "done", score: 0.55 },
+  { yearIdx: 1, q: 1, status: "done", score: 0.70 },
+  { yearIdx: 1, q: 2, status: "done", score: 0.65 },
+  { yearIdx: 2, q: 1, status: "done", score: 0.85 },
+  { yearIdx: 2, q: 2, status: "done", score: 0.50 },
+];
+
+// ----- Study log -----
+const STUDY_LOG = [
+  {
+    date: "5/24 (日)",
+    type: "バッファ",
+    time: 95,
+    items: [
+      { subj: "A-2", text: "問4(2010) 復習・問6(2010) 復習" },
+      { subj: "復習", text: "復習正答率80%未満カード × 3 追加" },
+    ],
+    note: "リアルタイムスケジューリング (RM) の優先度逆転を整理した",
+    next: "明日からのB-1で割り込み処理を含む問題を優先選択",
+  },
+  {
+    date: "5/23 (土)",
+    type: "稼働",
+    time: 142,
+    items: [
+      { subj: "A-2", text: "問13(2010) 復習・問14(2010) 導入" },
+      { subj: "B-1", text: "平成24年度春期 問2 — メモリ管理シナリオ" },
+      { subj: "B-2", text: "平成22年度秋期 問3 状況組み立て5" },
+    ],
+    note: "B-1 で40分以内に解答完了。所要時間が目標内に収まった",
+    next: "B-2 状況組み立てを明日から週末はまとめて2工数分進める",
+  },
+];
+
+
+// ===== components =====
+// ===== Shared UI components =====
+
+const Icon = ({ name, size = 16 }) => {
+  const stroke = "currentColor";
+  const sw = 1.6;
+  const paths = {
+    home: <><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10.5V20h14V10.5"/></>,
+    calendar: <><rect x="3.5" y="4.5" width="17" height="16" rx="2"/><path d="M3.5 9h17"/><path d="M8 3v3M16 3v3"/></>,
+    play: <path d="M7 5v14l12-7z"/>,
+    cards: <><rect x="3.5" y="4.5" width="13" height="16" rx="1.5"/><rect x="7.5" y="7.5" width="13" height="13" rx="1.5"/></>,
+    chart: <><path d="M4 20V8"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M3 20h18"/></>,
+    target: <><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/></>,
+    book: <><path d="M4 5v15a1 1 0 0 0 1 1h15V6a1 1 0 0 0-1-1H7a3 3 0 0 0-3 3z"/><path d="M4 5a3 3 0 0 1 3-3h13"/></>,
+    spark: <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.5 5.5l2 2M16.5 16.5l2 2M5.5 18.5l2-2M16.5 7.5l2-2"/>,
+    flame: <path d="M12 22c4 0 7-3 7-7 0-3-2-5-3-7-1 2-3 2-3 4-2-2-3-5-3-8-3 3-5 6-5 11 0 4 3 7 7 7z"/>,
+    check: <path d="M4 12l5 5L20 6" strokeWidth="2.5"/>,
+    clock: <><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></>,
+    flag: <><path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/></>,
+    chevron: <path d="M9 6l6 6-6 6"/>,
+    sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></>,
+    pause: <><rect x="6.5" y="5" width="3.5" height="14" rx="1"/><rect x="14" y="5" width="3.5" height="14" rx="1"/></>,
+    plus: <><path d="M12 5v14M5 12h14"/></>,
+    settings: <><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14 3h-4l-.6 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2L10 21h4l.6-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></>,
+    coach: <><path d="M12 3l3 6 6 1-4.5 4 1 6.5-5.5-3-5.5 3 1-6.5L3 10l6-1z"/></>,
+    layers: <><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 18l9 5 9-5"/></>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+      {paths[name]}
+    </svg>
+  );
+};
+
+const NAV = [
+  { section: "学習", items: [
+    { id: "dashboard", label: "ダッシュボード", icon: "home" },
+    { id: "today", label: "今日のセッション", icon: "play", badge: "進行中" },
+    { id: "cards", label: "A-2 カード進行", icon: "cards" },
+  ]},
+  { section: "演習", items: [
+    { id: "pastexams", label: "過去問進捗", icon: "book" },
+    { id: "weak", label: "弱点マップ", icon: "target", badge: "7" },
+  ]},
+  { section: "レビュー", items: [
+    { id: "weekly", label: "週次レビュー", icon: "chart" },
+    { id: "monthly", label: "月次レビュー", icon: "flag" },
+  ]},
+];
+
+const Sidebar = ({ current, setCurrent }) => (
+  <aside className="sidebar">
+    <div className="brand">
+      <div className="brand-mark">越</div>
+      <div>
+        <div className="brand-name">越境コーチ</div>
+        <div className="brand-sub">ES-SP / 2027.02</div>
+      </div>
+    </div>
+
+    {NAV.map((s, i) => (
+      <div className="nav-section" key={i}>
+        <h6>{s.section}</h6>
+        {s.items.map((it) => (
+          <button
+            key={it.id}
+            className={"nav-item" + (current === it.id ? " active" : "")}
+            onClick={() => setCurrent(it.id)}
+          >
+            <span className="nav-glyph"><Icon name={it.icon} size={15}/></span>
+            <span>{it.label}</span>
+            {it.badge && <span className="nav-tag">{it.badge}</span>}
+          </button>
+        ))}
+      </div>
+    ))}
+
+    <div className="sidebar-foot">
+      <div className="avatar">あ</div>
+      <div>
+        <div style={{fontWeight: 600}}>あなた</div>
+        <div className="muted" style={{fontSize: 11}}>計画 Day {DAY_IDX + 1} / {TOTAL_DAYS}</div>
+      </div>
+    </div>
+  </aside>
+);
+
+const PageHead = ({ crumb, title, sub, right }) => (
+  <div className="page-head">
+    <div className="page-head-main">
+      {crumb && <div className="crumb">{crumb}</div>}
+      <h1>{title}</h1>
+      {sub && <div className="sub">{sub}</div>}
+    </div>
+    {right && <div className="page-head-right">{right}</div>}
+  </div>
+);
+
+const KPI = ({ value, unit, label, delta, deltaDir = "up" }) => (
+  <div className="kpi">
+    <div className="label">{label}</div>
+    <div className="val">{value}{unit && <span className="unit">{unit}</span>}</div>
+    {delta && <div className={`delta ${deltaDir}`}>{deltaDir === "down" ? "↓" : deltaDir === "flat" ? "→" : "↑"} {delta}</div>}
+  </div>
+);
+
+const Bar = ({ value, max = 1, color }) => (
+  <div className="bar">
+    <div style={{ width: `${Math.min(100, (value / max) * 100)}%`, background: color || "var(--ink)" }}/>
+  </div>
+);
+
+const SubjTag = ({ subj }) => {
+  const cls = subj === "A-2" ? "a2" : subj === "B-1" ? "b1" : subj === "B-2" ? "b2" : "";
+  return <span className={"subj-tag " + cls}>{subj}</span>;
+};
+
+const Check = ({ done, onToggle }) => (
+  <div className={"check" + (done ? " done" : "")} onClick={onToggle}>
+    <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 12l5 5L20 6"/>
+    </svg>
+  </div>
+);
+
+// Coach message card
+const Coach = ({ messages = [], actions = [], onAction }) => (
+  <div className="coach">
+    <div className="coach-head">
+      <div className="coach-mark">越</div>
+      <div>
+        <div className="coach-name">越境コーチ</div>
+        <div className="coach-meta">{new Date(TODAY).toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "long" })} · おはようございます</div>
+      </div>
+    </div>
+    {messages.map((m, i) => (
+      <div className="coach-msg" key={i} style={{marginTop: i === 0 ? 4 : 10}} dangerouslySetInnerHTML={{__html: m}}/>
+    ))}
+    {actions.length > 0 && (
+      <div className="coach-actions">
+        {actions.map((a, i) => (
+          <button key={i} className={"btn sm " + (i === 0 ? "primary" : "")} onClick={() => onAction && onAction(a)}>
+            {a.label}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
+// Phase strip — the 9-month plan
+const PhaseStrip = () => (
+  <div className="phase-strip">
+    {PHASES.map((p, i) => (
+      <div key={i} className={"phase-cell " + p.status}>
+        <span className="month">{p.m}</span>
+        {p.label}
+      </div>
+    ))}
+  </div>
+);
+
+// Reused: percent badge
+const Pct = ({ value, threshold = [0.6, 0.75] }) => {
+  const c = value >= threshold[1] ? "ok" : value >= threshold[0] ? "warn" : "danger";
+  return <span className={"chip " + c}><span className="num">{Math.round(value * 100)}%</span></span>;
+};
+
+// Export to window for cross-file access
+Object.assign(window, {
+  Icon, Sidebar, PageHead, KPI, Bar, SubjTag, Check, Coach, PhaseStrip, Pct,
+});
+
+
+// ===== dashboard =====
+// ===== Dashboard screen =====
+
+const Dashboard = ({ tasks, toggleTask, goto }) => {
+  const examDays = DAYS_TO_EXAM;
+  const planPct = ((DAY_IDX + 1) / TOTAL_DAYS) * 100;
+
+  // Today's tasks summary
+  const todayTotal = tasks.length;
+  const todayDone = tasks.filter(t => t.done).length;
+
+  return (
+    <>
+      <PageHead
+        crumb="ホーム"
+        title="ダッシュボード"
+        sub="エンベデッドシステムスペシャリスト試験 (2027年2月) に向けた今日の作戦盤。"
+        right={
+          <button className="btn primary" onClick={() => goto("today")}>
+            <Icon name="play" size={14}/> 今日のセッションを開始
+          </button>
+        }
+      />
+
+      {/* Top tile row */}
+      <div className="grid-4" style={{marginBottom: 16}}>
+        <div className="card">
+          <KPI label="試験まで" value={examDays} unit="日" delta={`${Math.ceil(examDays/7)}週`} deltaDir="flat"/>
+          <div style={{marginTop: 14}}>
+            <div className="muted" style={{fontSize: 11, marginBottom: 6}}>2027.02.15 (予)</div>
+            <div className="bar"><div style={{width: `${planPct}%`, background: "var(--ink)"}}/></div>
+            <div className="muted num" style={{fontSize: 11, marginTop: 6}}>計画 Day {DAY_IDX + 1} / {TOTAL_DAYS}</div>
+          </div>
+        </div>
+
+        <div className="card">
+          <KPI label="連続学習" value={STREAK} unit="日" delta="新記録" deltaDir="up"/>
+          <div style={{marginTop: 14, display: "flex", gap: 4}}>
+            {Array.from({length: 14}).map((_, i) => (
+              <div key={i} style={{
+                flex: 1, height: 26, borderRadius: 3,
+                background: i < 14 ? "var(--ink)" : "var(--surface-2)",
+                opacity: i < 14 ? (0.4 + (i / 14) * 0.6) : 1,
+              }}/>
+            ))}
+          </div>
+          <div className="muted" style={{fontSize: 11, marginTop: 6}}>過去14日</div>
+        </div>
+
+        <div className="card">
+          <KPI label="今日のタスク" value={`${todayDone}/${todayTotal}`} unit=""/>
+          <div style={{marginTop: 14}}>
+            <div className="bar"><div style={{width: `${(todayDone/todayTotal)*100}%`, background: "var(--accent)"}}/></div>
+            <div className="muted" style={{fontSize: 11, marginTop: 8, display: "flex", gap: 12}}>
+              <span><SubjTag subj="A-2"/> 2</span>
+              <span><SubjTag subj="B-1"/> 0</span>
+              <span><SubjTag subj="B-2"/> 1</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <KPI label="今週の学習時間" value={(WEEKLY_KPI.study_time_min/60).toFixed(1)} unit="時間" delta="+18% 前週比" deltaDir="up"/>
+          <div style={{marginTop: 14, display: "flex", gap: 4, alignItems: "flex-end", height: 36}}>
+            {[42, 78, 60, 95, 88, 142, 95].map((m, i) => (
+              <div key={i} style={{
+                flex: 1, height: `${(m/142)*100}%`,
+                background: i === 6 ? "var(--accent)" : "var(--ink)",
+                opacity: i === 6 ? 1 : 0.35,
+                borderRadius: 2,
+              }}/>
+            ))}
+          </div>
+          <div className="muted num" style={{fontSize: 10, marginTop: 4, display: "flex", justifyContent: "space-between"}}>
+            <span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Phase strip */}
+      <div className="card" style={{marginBottom: 16}}>
+        <div className="card-head">
+          <h3>年間フェーズ</h3>
+          <div className="sub">2026年5月 → 2027年2月 · 9ヶ月計画</div>
+        </div>
+        <PhaseStrip/>
+      </div>
+
+      {/* Coach */}
+      <div style={{marginBottom: 16}}>
+        <Coach
+          messages={[
+            `今日は <em>計画 Day 15 / 228</em> 、第3週の月曜日です。週6枚ペースで進めるなら、今日は <em>A-2 問15 (2010) の導入</em> と <em>復習カード × 2</em>、そして <em>B-2 平成22年度秋期「機能分担」の状況組み立て5</em> が予定です。`,
+            `先週の <em>A-2 復習正答率 88%</em> は目標90%にあと少し。<em>RM スケジューリングの優先度逆転</em> がまだ揺れているので、今日の復習で再確認をおすすめします。`,
+          ]}
+          actions={[
+            { label: "今日のセッションを開始", to: "today" },
+            { label: "今週の予定を見る", to: "cards" },
+            { label: "弱点を確認", to: "weak" },
+          ]}
+          onAction={(a) => goto(a.to)}
+        />
+      </div>
+
+      {/* Two column */}
+      <div className="row" style={{alignItems: "flex-start"}}>
+        <div className="col" style={{flex: 1.4}}>
+          {/* Today's tasks */}
+          <div className="card">
+            <div className="card-head">
+              <h3>今日のタスク <span className="muted" style={{fontWeight: 400, marginLeft: 6}}>5/25 (月) · 稼働日</span></h3>
+              <button className="btn sm" onClick={() => goto("today")}>セッションを開始 →</button>
+            </div>
+            {tasks.map((t, i) => (
+              <div className={"task" + (t.done ? " done" : "")} key={i}>
+                <Check done={t.done} onToggle={() => toggleTask(i)}/>
+                <div className="body">
+                  <div className="title">{t.title}</div>
+                  <div className="meta">
+                    <SubjTag subj={t.subj}/>
+                    <span>{t.detail}</span>
+                    <span><Icon name="clock" size={11}/> {t.est}分</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Weekly KPI */}
+          <div className="card">
+            <div className="card-head">
+              <h3>今週の指標 <span className="muted" style={{fontWeight: 400, marginLeft: 6}}>5/18 — 5/24</span></h3>
+              <button className="btn sm ghost" onClick={() => goto("weekly")}>レビューを書く →</button>
+            </div>
+
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>指標</th>
+                  <th style={{width: 100}}>目標</th>
+                  <th style={{width: 100}}>今週</th>
+                  <th style={{width: 180}}>4週推移</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>科目A-2 実施率</td>
+                  <td className="num muted">100%</td>
+                  <td className="num"><Pct value={WEEKLY_KPI.a2_jisshi} threshold={[0.85, 0.95]}/></td>
+                  <td><Spark series={[0.86, 0.88, 0.94, 0.96]} target={1.0}/></td>
+                </tr>
+                <tr>
+                  <td>科目A-2 初見正答率</td>
+                  <td className="num muted">70%+</td>
+                  <td className="num"><Pct value={WEEKLY_KPI.a2_shoken} threshold={[0.6, 0.7]}/></td>
+                  <td><Spark series={WEEKLY_TREND.map(w => w.a2_new)} target={0.7}/></td>
+                </tr>
+                <tr>
+                  <td>科目A-2 復習正答率</td>
+                  <td className="num muted">90%+</td>
+                  <td className="num"><Pct value={WEEKLY_KPI.a2_review} threshold={[0.8, 0.9]}/></td>
+                  <td><Spark series={WEEKLY_TREND.map(w => w.a2_rev)} target={0.9}/></td>
+                </tr>
+                <tr>
+                  <td>科目B-1 設問正答率</td>
+                  <td className="num muted">70%+</td>
+                  <td className="num"><Pct value={WEEKLY_KPI.b1_seitou} threshold={[0.55, 0.7]}/></td>
+                  <td><Spark series={WEEKLY_TREND.map(w => w.b1)} target={0.7}/></td>
+                </tr>
+                <tr>
+                  <td>科目B-1 解答時間</td>
+                  <td className="num muted">≤45分</td>
+                  <td className="num">
+                    <span className="chip warn"><span className="num">{WEEKLY_KPI.b1_time}分</span></span>
+                  </td>
+                  <td><Spark series={[58, 53, 50, 48]} target={45} invert/></td>
+                </tr>
+                <tr>
+                  <td>科目B-2 完答率</td>
+                  <td className="num muted">100%</td>
+                  <td className="num"><Pct value={WEEKLY_KPI.b2_kantou} threshold={[0.9, 1.0]}/></td>
+                  <td><Spark series={[1.0, 1.0, 1.0, 1.0]} target={1.0}/></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="col" style={{flex: 1}}>
+          {/* Mistakes by type */}
+          <div className="card">
+            <div className="card-head">
+              <h3>ミスのパターン</h3>
+              <div className="sub">直近4週</div>
+            </div>
+
+            <div style={{display: "flex", flexDirection: "column", gap: 12, marginTop: 6}}>
+              {MISTAKE_LOG.map((w, i) => {
+                const total = w.knowledge + w.understanding + w.careless;
+                return (
+                  <div key={i}>
+                    <div style={{display: "flex", justifyContent: "space-between", marginBottom: 4, fontSize: 11.5}}>
+                      <span className="muted">{w.week}</span>
+                      <span className="num muted">{total}件</span>
+                    </div>
+                    <div style={{display: "flex", height: 14, borderRadius: 4, overflow: "hidden", border: "1px solid var(--border)"}}>
+                      <div style={{
+                        flex: w.knowledge, background: "oklch(0.65 0.16 25)",
+                        display: "grid", placeItems: "center", color: "white", fontSize: 10, fontFamily: "var(--mono)",
+                      }} title="知識不足">{w.knowledge}</div>
+                      <div style={{
+                        flex: w.understanding, background: "oklch(0.7 0.13 75)",
+                        display: "grid", placeItems: "center", color: "white", fontSize: 10, fontFamily: "var(--mono)",
+                      }}>{w.understanding}</div>
+                      <div style={{
+                        flex: w.careless, background: "oklch(0.55 0.11 200)",
+                        display: "grid", placeItems: "center", color: "white", fontSize: 10, fontFamily: "var(--mono)",
+                      }}>{w.careless}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{marginTop: 12, display: "flex", gap: 12, fontSize: 11}}>
+              <span><span className="dot" style={{background: "oklch(0.65 0.16 25)"}}/> 知識不足</span>
+              <span><span className="dot" style={{background: "oklch(0.7 0.13 75)"}}/> 理解不足</span>
+              <span><span className="dot" style={{background: "oklch(0.55 0.11 200)"}}/> ケアレス</span>
+            </div>
+
+            <div style={{
+              marginTop: 12, padding: "10px 12px",
+              background: "var(--warn-soft)", borderRadius: 6,
+              fontSize: 12, color: "oklch(0.4 0.11 70)",
+              border: "1px solid oklch(0.86 0.06 80)",
+            }}>
+              <Icon name="spark" size={12}/> <strong>理解不足型</strong>が2週連続で最多。教材の追加 / 解答プロセス見直しの検討時期です。
+            </div>
+          </div>
+
+          {/* Weak point preview */}
+          <div className="card">
+            <div className="card-head">
+              <h3>弱点マップ</h3>
+              <button className="btn sm ghost" onClick={() => goto("weak")}>全て見る →</button>
+            </div>
+
+            <div style={{display: "flex", gap: 8, marginBottom: 14}}>
+              <div style={{flex: 1, textAlign: "center", padding: "10px 0", background: "var(--ok-soft)", borderRadius: 6, border: "1px solid oklch(0.86 0.05 150)"}}>
+                <div className="num" style={{fontSize: 22, fontWeight: 600, color: "oklch(0.4 0.1 150)"}}>1</div>
+                <div style={{fontSize: 10.5, color: "oklch(0.4 0.1 150)"}}>解消</div>
+              </div>
+              <div style={{flex: 1, textAlign: "center", padding: "10px 0", background: "var(--accent-soft)", borderRadius: 6, border: "1px solid var(--accent-border)"}}>
+                <div className="num" style={{fontSize: 22, fontWeight: 600, color: "var(--accent-ink)"}}>2</div>
+                <div style={{fontSize: 10.5, color: "var(--accent-ink)"}}>改善中</div>
+              </div>
+              <div style={{flex: 1, textAlign: "center", padding: "10px 0", background: "var(--warn-soft)", borderRadius: 6, border: "1px solid oklch(0.86 0.06 80)"}}>
+                <div className="num" style={{fontSize: 22, fontWeight: 600, color: "oklch(0.42 0.11 70)"}}>2</div>
+                <div style={{fontSize: 10.5, color: "oklch(0.42 0.11 70)"}}>停滞</div>
+              </div>
+              <div style={{flex: 1, textAlign: "center", padding: "10px 0", background: "var(--danger-soft)", borderRadius: 6, border: "1px solid oklch(0.84 0.07 25)"}}>
+                <div className="num" style={{fontSize: 22, fontWeight: 600, color: "oklch(0.4 0.14 25)"}}>2</div>
+                <div style={{fontSize: 10.5, color: "oklch(0.4 0.14 25)"}}>未着手</div>
+              </div>
+            </div>
+
+            <div className="section-title">注目すべき論点</div>
+            {WEAK_MAP.filter(w => w.status === "active" || w.status === "todo").slice(0, 3).map(w => (
+              <div key={w.id} style={{
+                padding: "8px 0", borderTop: "1px solid var(--border)",
+                display: "flex", gap: 10, alignItems: "flex-start"
+              }}>
+                <span className={"dot " + (w.status === "todo" ? "danger" : "warn")}/>
+                <div style={{flex: 1, minWidth: 0}}>
+                  <div style={{fontSize: 13, fontWeight: 500}}>{w.topic}</div>
+                  <div className="muted" style={{fontSize: 11, marginTop: 1}}>
+                    <SubjTag subj={w.subject}/> &nbsp; {w.note || "対策未策定"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Study log */}
+          <div className="card">
+            <div className="card-head">
+              <h3>直近の学習記録</h3>
+              <button className="btn sm ghost">全て見る →</button>
+            </div>
+
+            {STUDY_LOG.map((l, i) => (
+              <div key={i} style={{
+                padding: "10px 0",
+                borderTop: i > 0 ? "1px solid var(--border)" : "none",
+              }}>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "baseline"}}>
+                  <div style={{fontSize: 12.5, fontWeight: 600}}>{l.date}</div>
+                  <div className="muted num" style={{fontSize: 11}}>
+                    <span className="chip">{l.type}</span>
+                    &nbsp;<Icon name="clock" size={10}/> {l.time}分
+                  </div>
+                </div>
+                {l.items.map((it, j) => (
+                  <div key={j} style={{fontSize: 12, marginTop: 4, color: "var(--ink-2)"}}>
+                    <SubjTag subj={it.subj}/> {it.text}
+                  </div>
+                ))}
+                {l.note && (
+                  <div style={{
+                    marginTop: 6, fontSize: 11.5, color: "var(--muted)",
+                    paddingLeft: 8, borderLeft: "2px solid var(--accent-border)",
+                  }}>
+                    気づき: {l.note}
+                  </div>
+                )}
+                {l.next && (
+                  <div style={{fontSize: 11.5, color: "var(--accent-ink)", marginTop: 4, paddingLeft: 8, borderLeft: "2px solid var(--accent)"}}>
+                    明日の一手: {l.next}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// Small sparkline component
+const Spark = ({ series, target, invert = false }) => {
+  const w = 160, h = 28;
+  const max = Math.max(...series, target);
+  const min = Math.min(...series, target) * 0.95;
+  const range = max - min || 1;
+  const pts = series.map((v, i) => {
+    const x = (i / (series.length - 1)) * (w - 4) + 2;
+    const y = h - 2 - ((v - min) / range) * (h - 4);
+    return [x, y];
+  });
+  const path = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+  const targetY = h - 2 - ((target - min) / range) * (h - 4);
+  const last = series[series.length - 1];
+  const lastY = pts[pts.length - 1][1];
+  const ok = invert ? last <= target : last >= target;
+
+  return (
+    <svg width={w} height={h} style={{display: "block"}}>
+      <line x1={2} y1={targetY} x2={w-2} y2={targetY} stroke="var(--border-strong)" strokeWidth="1" strokeDasharray="2,2"/>
+      <path d={path} fill="none" stroke="var(--ink)" strokeWidth="1.5" strokeLinejoin="round"/>
+      {pts.map((p, i) => (
+        <circle key={i} cx={p[0]} cy={p[1]} r={i === pts.length - 1 ? 3 : 1.5} fill={i === pts.length - 1 ? (ok ? "var(--ok)" : "var(--danger)") : "var(--ink)"}/>
+      ))}
+    </svg>
+  );
+};
+
+Object.assign(window, { Dashboard, Spark });
+
+
+// ===== today =====
+// ===== Today's session screen =====
+
+const Today = ({ tasks, toggleTask, goto, openProblem }) => {
+  const [activeIdx, setActiveIdx] = React.useState(() => {
+    const i = tasks.findIndex(t => !t.done);
+    return i < 0 ? 0 : i;
+  });
+  const [memoText, setMemoText] = React.useState("RM スケジューリングの優先度逆転 — 共有資源を持つ低優先タスクが中優先タスクに阻まれる現象。優先度継承プロトコル (PIP) で対策。");
+
+  const active = tasks[activeIdx];
+  const canOpenProblem = active && active.subj === "A-2" && active.cardC;
+
+  return (
+    <>
+      <PageHead
+        crumb="学習 / 今日のセッション"
+        title="今日のセッション"
+        sub="5月25日(月) · 計画 Day 15 / 228 · 稼働日"
+        right={
+          <div style={{display: "flex", gap: 8}}>
+            <button className="btn" onClick={() => goto("dashboard")}>← ダッシュボード</button>
+            <button className="btn primary">セッションを終了</button>
+          </div>
+        }
+      />
+
+      {/* Top: current task (no timer / no pomodoro grid) */}
+      <div className="card" style={{marginBottom: 18, padding: 22}}>
+        <div className="label" style={{marginBottom: 8}}>現在の課題</div>
+        {active && (
+          <>
+            <div style={{display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap"}}>
+              <div style={{flex: "1 1 240px", minWidth: 0}}>
+                <div style={{fontSize: 20, fontWeight: 600, lineHeight: 1.35}}>
+                  {active.title}
+                </div>
+                <div style={{marginTop: 6, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap"}}>
+                  <SubjTag subj={active.subj}/>
+                  <span className="muted" style={{fontSize: 12.5}}>{active.detail}</span>
+                  <span className="muted" style={{fontSize: 12.5}}><Icon name="clock" size={11}/> 目安 {active.est} 分</span>
+                </div>
+              </div>
+
+              <div style={{display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap"}}>
+                {canOpenProblem && (
+                  <button className="btn primary" onClick={() => openProblem(active.cardC, active.rep)}>
+                    <Icon name="book" size={13}/> 問題を開く
+                  </button>
+                )}
+                <button className="btn ok" style={{background: "var(--ok)", borderColor: "var(--ok)", color: "white"}} onClick={() => {
+                  toggleTask(activeIdx);
+                  const next = tasks.findIndex((t, i) => i > activeIdx && !t.done);
+                  if (next >= 0) setActiveIdx(next);
+                }}>
+                  <Icon name="check" size={13}/> 完了
+                </button>
+                <button className="btn">スキップ</button>
+              </div>
+            </div>
+
+            {canOpenProblem && (
+              <div style={{marginTop: 14, padding: 12, background: "var(--surface-2)", borderRadius: 8}}>
+                <div className="label" style={{marginBottom: 6}}>カード情報</div>
+                <div className="stat-row">
+                  <div className="stat-cell">
+                    <div className="muted" style={{fontSize: 11}}>通し番号</div>
+                    <div className="num" style={{fontSize: 22, fontWeight: 600}}>#{active.cardC}</div>
+                  </div>
+                  <div className="stat-cell">
+                    <div className="muted" style={{fontSize: 11}}>原問</div>
+                    <div style={{fontSize: 14, fontWeight: 500}} className="num">問{cardToProblem(active.cardC).q} ({cardToProblem(active.cardC).year})</div>
+                  </div>
+                  <div className="stat-cell">
+                    <div className="muted" style={{fontSize: 11}}>{active.rep === 0 ? "導入" : `${active.rep}回目の復習`}</div>
+                    <div className="num" style={{fontSize: 14, fontWeight: 500}}>
+                      {active.rep === 0 ? "新規" : `間隔 ${Math.pow(2, active.rep - 1) === 1 ? 1 : Math.pow(2, active.rep - 1)}日`}
+                    </div>
+                  </div>
+                  <div className="stat-cell">
+                    <div className="muted" style={{fontSize: 11}}>次回出現</div>
+                    <div className="num" style={{fontSize: 14, fontWeight: 500}}>+{Math.pow(2, active.rep)}日後</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Body: queue + memo */}
+      <div className="row" style={{gap: 18, alignItems: "flex-start"}}>
+        <div className="col" style={{flex: 1}}>
+          <div className="card">
+            <div className="card-head">
+              <h3>本日のタスクキュー</h3>
+              <span className="chip">{tasks.filter(t => !t.done).length} 残</span>
+            </div>
+            {tasks.map((t, i) => (
+              <div
+                key={i}
+                onClick={() => setActiveIdx(i)}
+                className={"task" + (t.done ? " done" : "")}
+                style={{
+                  cursor: "pointer",
+                  background: activeIdx === i ? "var(--accent-soft)" : "transparent",
+                  marginLeft: -10, marginRight: -10, paddingLeft: 10, paddingRight: 10,
+                  borderRadius: 6,
+                  borderTop: i === 0 ? "none" : "1px solid var(--border)",
+                }}
+              >
+                <Check done={t.done} onToggle={(e) => { (e && e.stopPropagation && e.stopPropagation()); toggleTask(i); }}/>
+                <div className="body">
+                  <div className="title">{t.title}</div>
+                  <div className="meta">
+                    <SubjTag subj={t.subj}/>
+                    <span>{t.detail}</span>
+                    <span><Icon name="clock" size={11}/> {t.est}分</span>
+                    {activeIdx === i && <span className="chip accent" style={{marginLeft: "auto"}}>進行中</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="divider"/>
+            <div className="label" style={{marginBottom: 6}}>本日休止の科目</div>
+            <div className="task" style={{opacity: 0.55}}>
+              <div style={{width: 18, height: 18, borderRadius: 5, border: "1.5px dashed var(--border-strong)", flexShrink: 0, marginTop: 2}}/>
+              <div className="body">
+                <div className="title">科目B-1 は本日休み</div>
+                <div className="meta">
+                  <SubjTag subj="B-1"/>
+                  <span>火・木・土に実施 — 次回 5/26 (火)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col" style={{flex: 1.2}}>
+          {/* Memo */}
+          <div className="card">
+            <div className="card-head">
+              <h3>気づきメモ</h3>
+              <span className="muted" style={{fontSize: 11}}>このタスクに紐づく</span>
+            </div>
+            <textarea
+              value={memoText}
+              onChange={e => setMemoText(e.target.value)}
+              style={{
+                width: "100%",
+                minHeight: 110,
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                padding: 10,
+                fontFamily: "var(--sans)",
+                fontSize: 13,
+                background: "var(--surface-2)",
+                resize: "vertical",
+                color: "var(--ink)",
+                lineHeight: 1.6,
+              }}
+            />
+            <div className="muted" style={{fontSize: 11, marginTop: 6, display: "flex", justifyContent: "space-between"}}>
+              <span>記録: {memoText.length} 文字</span>
+              <span className="linkish">+ 弱点メモに昇格</span>
+            </div>
+          </div>
+
+          {/* Self-grade */}
+          <div className="card">
+            <div className="card-head">
+              <h3>セルフ採点</h3>
+              <span className="muted" style={{fontSize: 11}}>タスク完了時に記録</span>
+            </div>
+            <SelfGrade subj={active?.subj}/>
+          </div>
+
+          {/* Quick mistake log */}
+          <div className="card">
+            <div className="card-head">
+              <h3>今のミスを記録</h3>
+              <span className="muted" style={{fontSize: 11}}>3カテゴリへ振り分け</span>
+            </div>
+            <div className="grid-3" style={{gap: 8}}>
+              <MistakeBtn label="知識不足型" desc="そもそも知らなかった" color="oklch(0.65 0.16 25)"/>
+              <MistakeBtn label="理解不足型" desc="知識と文脈が結びつかなかった" color="oklch(0.7 0.13 75)"/>
+              <MistakeBtn label="ケアレス型" desc="読み落とし・字数オーバー" color="oklch(0.55 0.11 200)"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const SelfGrade = ({ subj }) => {
+  const [grade, setGrade] = React.useState(null);
+  if (subj === "B-1") {
+    return (
+      <div>
+        <div className="muted" style={{fontSize: 12, marginBottom: 8}}>各設問の正誤を入力</div>
+        <div style={{display: "flex", gap: 8}}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{flex: 1, padding: 10, background: "var(--surface-2)", borderRadius: 6, textAlign: "center"}}>
+              <div className="muted" style={{fontSize: 11}}>設問 {i}</div>
+              <div style={{display: "flex", gap: 4, marginTop: 6, justifyContent: "center"}}>
+                <button className="btn sm" style={{padding: "0 8px"}}>○</button>
+                <button className="btn sm" style={{padding: "0 8px"}}>△</button>
+                <button className="btn sm" style={{padding: "0 8px"}}>×</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop: 12}}>
+          <div className="muted" style={{fontSize: 11, marginBottom: 4}}>所要時間 (目標 ≤45分)</div>
+          <div style={{display: "flex", alignItems: "baseline", gap: 6}}>
+            <input type="number" defaultValue={42} style={{width: 60, padding: "4px 8px", border: "1px solid var(--border)", borderRadius: 4, fontFamily: "var(--mono)"}}/>
+            <span className="muted" style={{fontSize: 12}}>分</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  // A-2 (default) — B-2 branch intentionally removed
+  return (
+    <div>
+      <div className="muted" style={{fontSize: 12, marginBottom: 10}}>この問題の自己評価</div>
+      <div style={{display: "flex", gap: 6}}>
+        {[
+          { v: "ok", label: "正答", color: "var(--ok)" },
+          { v: "maybe", label: "迷った", color: "var(--warn)" },
+          { v: "ng", label: "誤答", color: "var(--danger)" },
+        ].map(o => (
+          <button
+            key={o.v}
+            onClick={() => setGrade(o.v)}
+            className="btn"
+            style={{
+              flex: 1, height: 40,
+              background: grade === o.v ? o.color : "var(--surface)",
+              color: grade === o.v ? "white" : "var(--ink)",
+              borderColor: grade === o.v ? o.color : "var(--border-strong)",
+            }}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      {grade && (
+        <div className="muted" style={{fontSize: 11.5, marginTop: 8, padding: 8, background: "var(--surface-2)", borderRadius: 4}}>
+          {grade === "ok" && "次回出現は +2 日後 (5/27) です。"}
+          {grade === "maybe" && "間隔をリセット、+1 日後 (5/26) に再出現させます。"}
+          {grade === "ng" && "弱点メモに自動追加 + 明日 (5/26) と +2 日後に再出現させます。"}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MistakeBtn = ({ label, desc, color }) => {
+  const [n, setN] = React.useState(0);
+  return (
+    <div
+      style={{
+        background: n > 0 ? color : "var(--surface-2)",
+        color: n > 0 ? "white" : "var(--ink)",
+        borderRadius: 8,
+        padding: 10,
+        border: "1px solid " + (n > 0 ? color : "var(--border)"),
+        cursor: "pointer",
+        position: "relative",
+        transition: "all 0.15s",
+      }}
+      onClick={() => setN(n + 1)}
+    >
+      <div style={{fontWeight: 600, fontSize: 12.5}}>{label}</div>
+      <div style={{fontSize: 10.5, opacity: 0.8, marginTop: 2}}>{desc}</div>
+      {n > 0 && (
+        <div style={{position: "absolute", top: 6, right: 8, fontFamily: "var(--mono)", fontSize: 18, fontWeight: 600}}>+{n}</div>
+      )}
+    </div>
+  );
+};
+
+Object.assign(window, { Today });
+
+
+// ===== problem =====
+// ===== A-2 Problem screen (実際の問い) =====
+// Shows the actual exam problem for a single card.
+// Problem content is mocked — replace `MOCK_PROBLEMS[c]` with real text when wired up.
+
+const MOCK_PROBLEMS = {
+  7: {
+    stem: "リアルタイムOSにおけるレートモノトニック (RM) スケジューリング方式に関する記述として、適切なものはどれか。",
+    choices: [
+      "周期の短いタスクほど高い優先度を与え、固定優先度方式でスケジューリングする。",
+      "デッドラインの近いタスクほど高い優先度を動的に与えて実行する。",
+      "全タスクの実行時間が等しい場合に限り適用可能で、ラウンドロビン方式と等価である。",
+      "実行時に CPU 使用率の余裕に応じて、優先度を動的に変更する。",
+    ],
+    answer: 0,
+    comment: "RM (Rate Monotonic) は固定優先度方式。周期 T が短いタスクほど優先度が高い。\nB の方式は EDF (Earliest Deadline First) — 動的優先度。\nC, D は誤り。",
+    tags: ["スケジューリング", "RTOS", "固定優先度"],
+  },
+  11: {
+    stem: "組込みシステムの割り込み処理に関する記述のうち、適切なものはどれか。",
+    choices: [
+      "ハードウェア割り込みは常にソフトウェア割り込みより優先される。",
+      "割り込み禁止区間が長くなるほど、応答時間 (latency) のジッタが増大する。",
+      "ネストした割り込みは禁止することで、再入可能性の問題を完全に解決できる。",
+      "DMA 転送中は CPU が他の処理を一切実行できない。",
+    ],
+    answer: 1,
+    comment: "割り込み禁止区間 (critical section) は応答性能の上限を制約する主要因。\nC については「再入可能でない関数」の問題は別途残るため誤り。",
+    tags: ["割り込み", "リアルタイム性"],
+  },
+  13: {
+    stem: "組込みシステムにおけるメモリ管理ユニット (MMU) の役割として、適切でないものはどれか。",
+    choices: [
+      "仮想アドレスと物理アドレスの変換を行う。",
+      "ページ単位でアクセス権 (R/W/X) を制御する。",
+      "キャッシュコヒーレンシを物理層で保証する。",
+      "プロセス間のメモリ空間を分離する。",
+    ],
+    answer: 2,
+    comment: "キャッシュコヒーレンシは MESI 等のキャッシュ制御層の責務で、MMU の機能ではない。",
+    tags: ["MMU", "メモリ管理", "仮想記憶"],
+  },
+};
+
+const FALLBACK_PROBLEM = {
+  stem: "（問題本文 — 実データ未投入）\n\nこのカードに対応する原問の本文をここに表示します。本番接続前のスタブとして、選択肢ア〜エが汎用テキストで描画されます。",
+  choices: ["選択肢ア", "選択肢イ", "選択肢ウ", "選択肢エ"],
+  answer: null,
+  comment: "（解説 — 実データ未投入）",
+  tags: [],
+};
+
+const Problem = ({ cardC, rep = 0, goto, onAnswered }) => {
+  const c = cardC || 7;
+  const meta = cardToProblem(c);
+  const problem = MOCK_PROBLEMS[c] || FALLBACK_PROBLEM;
+  const choiceLabels = ["ア", "イ", "ウ", "エ"];
+
+  const [selected, setSelected] = React.useState(null);
+  const [submitted, setSubmitted] = React.useState(false);
+  const [elapsedSec, setElapsedSec] = React.useState(0);
+
+  React.useEffect(() => {
+    const id = setInterval(() => setElapsedSec(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const mm = String(Math.floor(elapsedSec / 60)).padStart(2, "0");
+  const ss = String(elapsedSec % 60).padStart(2, "0");
+  const isCorrect = submitted && problem.answer !== null && selected === problem.answer;
+  const isWrong = submitted && problem.answer !== null && selected !== problem.answer;
+
+  return (
+    <>
+      <PageHead
+        crumb={`学習 / 今日のセッション / 問題 #${c}`}
+        title={<>問{meta.q} <span className="muted num" style={{fontSize: 18, fontWeight: 400}}>（{meta.year}年度）</span></>}
+        sub={
+          <span>
+            <SubjTag subj="A-2"/>
+            <span style={{marginLeft: 8}}>通し番号 #{c}</span>
+            <span style={{marginLeft: 12}} className="muted">·</span>
+            <span style={{marginLeft: 12}}>{rep === 0 ? "導入 (新規)" : `${rep}回目の復習`}</span>
+            <span style={{marginLeft: 12}} className="muted">·</span>
+            <span style={{marginLeft: 12}} className="num muted">経過 {mm}:{ss}</span>
+          </span>
+        }
+        right={
+          <div style={{display: "flex", gap: 8}}>
+            <button className="btn" onClick={() => goto("today")}>← セッションに戻る</button>
+          </div>
+        }
+      />
+
+      <div className="row" style={{gap: 18, alignItems: "flex-start"}}>
+        {/* Problem body — main column */}
+        <div className="col problem-main-col" style={{flex: 1.8, minWidth: 0}}>
+          <div className="card problem-card" style={{padding: 26}}>
+            <div style={{display: "flex", alignItems: "baseline", gap: 12, paddingBottom: 14, borderBottom: "1px solid var(--border)", marginBottom: 18}}>
+              <span style={{
+                fontFamily: "var(--mono)",
+                fontSize: 13,
+                background: "var(--ink)",
+                color: "var(--bg)",
+                padding: "3px 10px",
+                borderRadius: 4,
+                fontWeight: 600,
+                letterSpacing: "0.04em",
+              }}>問 {meta.q}</span>
+              <span className="muted num" style={{fontSize: 12}}>{meta.year}年度 春期 / 応用情報技術者試験 (午前II 想定)</span>
+            </div>
+
+            {/* Problem stem */}
+            <div style={{
+              fontSize: 16,
+              lineHeight: 1.95,
+              fontFamily: "var(--serif)",
+              fontWeight: 500,
+              color: "var(--ink)",
+              whiteSpace: "pre-wrap",
+              marginBottom: 22,
+            }}>
+              {problem.stem}
+            </div>
+
+            {/* Choices */}
+            <div style={{display: "flex", flexDirection: "column", gap: 10}}>
+              {problem.choices.map((text, i) => {
+                const picked = selected === i;
+                const isAnswer = submitted && problem.answer === i;
+                const isPickedWrong = submitted && picked && problem.answer !== null && problem.answer !== i;
+                let bg = "var(--surface)";
+                let border = "var(--border-strong)";
+                let labelBg = "var(--surface-2)";
+                let labelColor = "var(--ink)";
+                if (picked && !submitted) {
+                  bg = "var(--accent-soft)";
+                  border = "var(--accent)";
+                  labelBg = "var(--accent)";
+                  labelColor = "white";
+                }
+                if (isAnswer) {
+                  bg = "var(--ok-soft)";
+                  border = "var(--ok)";
+                  labelBg = "var(--ok)";
+                  labelColor = "white";
+                }
+                if (isPickedWrong) {
+                  bg = "var(--danger-soft)";
+                  border = "var(--danger)";
+                  labelBg = "var(--danger)";
+                  labelColor = "white";
+                }
+                return (
+                  <button
+                    key={i}
+                    onClick={() => !submitted && setSelected(i)}
+                    disabled={submitted}
+                    style={{
+                      display: "flex",
+                      gap: 14,
+                      alignItems: "flex-start",
+                      padding: "14px 16px",
+                      background: bg,
+                      border: "1.5px solid " + border,
+                      borderRadius: 8,
+                      cursor: submitted ? "default" : "pointer",
+                      textAlign: "left",
+                      fontFamily: "inherit",
+                      transition: "all 0.12s",
+                      width: "100%",
+                    }}
+                  >
+                    <span style={{
+                      flexShrink: 0,
+                      width: 30, height: 30,
+                      display: "grid", placeItems: "center",
+                      borderRadius: 6,
+                      background: labelBg,
+                      color: labelColor,
+                      fontFamily: "var(--serif)",
+                      fontWeight: 600,
+                      fontSize: 15,
+                    }}>{choiceLabels[i]}</span>
+                    <span style={{
+                      flex: 1, fontSize: 14.5,
+                      lineHeight: 1.7,
+                      paddingTop: 4,
+                      color: "var(--ink)",
+                    }}>{text}</span>
+                    {isAnswer && <span className="chip ok" style={{flexShrink: 0, marginTop: 4}}>正解</span>}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Action bar */}
+            <div className="action-bar" style={{
+              marginTop: 22,
+              paddingTop: 18,
+              borderTop: "1px solid var(--border)",
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}>
+              {!submitted ? (
+                <>
+                  <button
+                    className="btn primary"
+                    disabled={selected === null}
+                    onClick={() => setSubmitted(true)}
+                    style={{opacity: selected === null ? 0.4 : 1, cursor: selected === null ? "not-allowed" : "pointer"}}
+                  >
+                    解答する
+                  </button>
+                  <button className="btn" onClick={() => setSelected(null)} disabled={selected === null}>選択解除</button>
+                  <span className="muted" style={{fontSize: 12, marginLeft: "auto"}}>
+                    {selected === null ? "選択肢を選んでください" : `${choiceLabels[selected]} を選択中`}
+                  </span>
+                </>
+              ) : (
+                <>
+                  {isCorrect && <span className="chip ok"><Icon name="check" size={12}/> 正答</span>}
+                  {isWrong && <span className="chip danger">誤答</span>}
+                  {problem.answer === null && <span className="chip">提出済み (採点データ未投入)</span>}
+                  <span className="muted num" style={{fontSize: 12, marginLeft: "auto"}}>所要 {mm}:{ss}</span>
+                  <button className="btn" onClick={() => { setSubmitted(false); setSelected(null); }}>もう一度解く</button>
+                  <button className="btn primary" onClick={() => goto("today")}>セッションに戻る</button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Explanation — shown after submission */}
+          {submitted && (
+            <div className="card" style={{marginTop: 16}}>
+              <div className="card-head">
+                <h3>解説</h3>
+                <span className="muted" style={{fontSize: 11}}>正解: {problem.answer !== null ? choiceLabels[problem.answer] : "—"}</span>
+              </div>
+              <div style={{
+                fontSize: 13.5,
+                lineHeight: 1.85,
+                whiteSpace: "pre-wrap",
+                color: "var(--ink-2)",
+                padding: 12,
+                background: "var(--surface-2)",
+                borderRadius: 6,
+                border: "1px solid var(--border)",
+              }}>{problem.comment}</div>
+
+              {problem.tags && problem.tags.length > 0 && (
+                <div style={{marginTop: 12, display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center"}}>
+                  <span className="label" style={{marginRight: 4}}>関連トピック</span>
+                  {problem.tags.map((t, i) => (
+                    <span key={i} className="chip">{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Side: card meta */}
+        <div className="col" style={{flex: 1, minWidth: 240}}>
+          <div className="card">
+            <div className="card-head">
+              <h3>このカード</h3>
+              <span className="num muted" style={{fontSize: 11}}>#{c}</span>
+            </div>
+            <div style={{display: "grid", gap: 10, fontSize: 13}}>
+              <div style={{display: "flex", justifyContent: "space-between"}}>
+                <span className="muted">通し番号</span>
+                <span className="num" style={{fontWeight: 600}}>#{c}</span>
+              </div>
+              <div style={{display: "flex", justifyContent: "space-between"}}>
+                <span className="muted">原問</span>
+                <span className="num">問{meta.q} ({meta.year})</span>
+              </div>
+              <div style={{display: "flex", justifyContent: "space-between"}}>
+                <span className="muted">導入日</span>
+                <span className="num">Day {introDay(c)}</span>
+              </div>
+              <div style={{display: "flex", justifyContent: "space-between"}}>
+                <span className="muted">今回</span>
+                <span>{rep === 0 ? "導入 (新規)" : `${rep}回目の復習`}</span>
+              </div>
+              <div style={{display: "flex", justifyContent: "space-between"}}>
+                <span className="muted">次回出現</span>
+                <span className="num">+{Math.pow(2, rep)}日後</span>
+              </div>
+            </div>
+            <div className="divider"/>
+            <button className="btn sm" style={{width: "100%"}} onClick={() => goto("cards")}>
+              カード進行表で見る →
+            </button>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <h3>ミス分類</h3>
+              <span className="muted" style={{fontSize: 11}}>誤答時のみ</span>
+            </div>
+            <div style={{display: "flex", flexDirection: "column", gap: 6}}>
+              {[
+                ["知識不足型", "そもそも知らなかった", "oklch(0.65 0.16 25)"],
+                ["理解不足型", "知識と文脈が結びつかなかった", "oklch(0.7 0.13 75)"],
+                ["ケアレス型", "読み落とし・字数オーバー", "oklch(0.55 0.11 200)"],
+              ].map(([label, desc, color], i) => (
+                <button key={i} className="btn" style={{
+                  textAlign: "left",
+                  display: "block",
+                  padding: "8px 10px",
+                  borderColor: "var(--border)",
+                  opacity: isWrong ? 1 : 0.5,
+                  cursor: isWrong ? "pointer" : "not-allowed",
+                }} disabled={!isWrong}>
+                  <div style={{display: "flex", alignItems: "center", gap: 8}}>
+                    <span style={{width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0}}/>
+                    <span style={{fontWeight: 600, fontSize: 12.5}}>{label}</span>
+                  </div>
+                  <div className="muted" style={{fontSize: 10.5, marginTop: 2, marginLeft: 16}}>{desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <h3>気づきメモ</h3>
+            </div>
+            <textarea
+              placeholder="この問題で得た気づきを記録..."
+              style={{
+                width: "100%",
+                minHeight: 90,
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                padding: 10,
+                fontFamily: "var(--sans)",
+                fontSize: 13,
+                background: "var(--surface-2)",
+                resize: "vertical",
+                color: "var(--ink)",
+                lineHeight: 1.6,
+              }}
+            />
+            <div className="muted" style={{fontSize: 11, marginTop: 6}}>
+              <span className="linkish">+ 弱点メモに昇格</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+Object.assign(window, { Problem });
+
+
+// ===== cards =====
+// ===== A-2 Card schedule visualizer =====
+
+const CardSchedule = ({ goto, openProblem }) => {
+  const [focusCard, setFocusCard] = React.useState(7);
+  const [weekOffset, setWeekOffset] = React.useState(0); // 0 = current
+
+  // Show 4 weeks (28 days) starting from a Monday
+  // Today is day 15 (week 3 of plan, day 1)
+  // Show weeks 2..5 by default
+  const weekStartDay = 1 + (Math.floor((DAY_IDX) / 7) + weekOffset - 1) * 7;
+  const days = Array.from({length: 28}, (_, i) => weekStartDay + i);
+  const focusAppearances = appearancesForCard(focusCard);
+  const focusApps = focusAppearances.map(a => a.day);
+
+  return (
+    <>
+      <PageHead
+        crumb="学習 / A-2 カード進行"
+        title="科目A-2 カード進行"
+        sub="通し番号制 (§5.1) で管理する週6枚ペースの導入と、公比2の復習間隔 (1, 2, 4, 8, 16, 32日)。"
+        right={
+          <div className="seg">
+            <button className="on">グリッド</button>
+            <button>テーブル</button>
+            <button>カード詳細</button>
+          </div>
+        }
+      />
+
+      {/* Rule explainer */}
+      <div className="row" style={{marginBottom: 18, gap: 16}}>
+        <div className="card" style={{flex: 1.2}}>
+          <div className="card-head">
+            <h3>導入ルール</h3>
+          </div>
+          <div className="num" style={{
+            background: "var(--surface-2)",
+            padding: "10px 14px", borderRadius: 6,
+            fontSize: 13,
+            color: "var(--ink-2)",
+            border: "1px solid var(--border)",
+          }}>
+            導入日(c) = 7·⌊(c−1)/6⌋ + ((c−1) mod 6) + 1
+          </div>
+          <div style={{marginTop: 10, fontSize: 12, lineHeight: 1.7, color: "var(--ink-2)"}}>
+            月〜土に1枚ずつ新しいカードを導入（週6枚ペース）。<br/>
+            日曜は新規導入なし、復習のみ。
+          </div>
+        </div>
+
+        <div className="card" style={{flex: 1.2}}>
+          <div className="card-head">
+            <h3>復習間隔</h3>
+          </div>
+          <div className="num" style={{
+            background: "var(--surface-2)",
+            padding: "10px 14px", borderRadius: 6,
+            fontSize: 13,
+            color: "var(--ink-2)",
+            border: "1px solid var(--border)",
+          }}>
+            出現日 = D + (2^k − 1)
+          </div>
+          <div style={{display: "flex", gap: 6, marginTop: 10, alignItems: "center", fontFamily: "var(--mono)", fontSize: 11.5}}>
+            {[1, 2, 4, 8, 16, 32].map((d, i) => (
+              <React.Fragment key={i}>
+                <span style={{
+                  padding: "3px 8px",
+                  background: i === 0 ? "var(--ink)" : "var(--surface-2)",
+                  color: i === 0 ? "var(--bg)" : "var(--ink)",
+                  border: "1px solid " + (i === 0 ? "var(--ink)" : "var(--border)"),
+                  borderRadius: 4,
+                }}>{i === 0 ? "導入" : `+${d - 1}`}</span>
+                {i < 5 && <span style={{color: "var(--faint)"}}>→</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        <div className="card" style={{flex: 1}}>
+          <div className="card-head">
+            <h3>進捗</h3>
+          </div>
+          <div style={{display: "flex", gap: 14}}>
+            <div>
+              <div className="muted" style={{fontSize: 11}}>導入済み</div>
+              <div className="num" style={{fontSize: 24, fontWeight: 600}}>13<span className="muted" style={{fontSize: 13}}> / 400</span></div>
+            </div>
+            <div>
+              <div className="muted" style={{fontSize: 11}}>本日まで実施</div>
+              <div className="num" style={{fontSize: 24, fontWeight: 600}}>87<span className="muted" style={{fontSize: 13}}> 回</span></div>
+            </div>
+          </div>
+          <div className="bar" style={{marginTop: 12}}><div style={{width: `${13/400*100}%`}}/></div>
+        </div>
+      </div>
+
+      {/* Schedule grid */}
+      <div className="card" style={{marginBottom: 18}}>
+        <div className="card-head">
+          <h3>4週間スケジュール</h3>
+          <div style={{display: "flex", gap: 8, alignItems: "center"}}>
+            <button className="btn sm" onClick={() => setWeekOffset(weekOffset - 1)}>← 前4週</button>
+            <span className="muted num" style={{fontSize: 12}}>
+              計画 Day {weekStartDay} – {weekStartDay + 27}
+            </span>
+            <button className="btn sm" onClick={() => setWeekOffset(weekOffset + 1)}>後4週 →</button>
+          </div>
+        </div>
+
+        {/* Card schedule grid — horizontally scrollable on small screens */}
+        <div className="cardgrid-scroll">
+          {/* DOW header */}
+          <div className="cardgrid" style={{marginBottom: 6}}>
+            {["月", "火", "水", "木", "金", "土", "日"].map((d, i) => (
+              <div key={i} className="label" style={{textAlign: "left", padding: "0 8px"}}>{d}</div>
+            ))}
+          </div>
+
+          <div className="cardgrid">
+          {days.map((day) => {
+            const dow = (day - 1) % 7; // 0=mon..6=sun
+            const isSunday = dow === 6;
+            const isToday = day === TODAY_DAY_NUMBER;
+            const isFuture = day > TODAY_DAY_NUMBER;
+            const isPast = day < TODAY_DAY_NUMBER;
+            const cards = cardsOnDay(day);
+            // Calculate corresponding calendar date
+            const date = new Date(START_DATE);
+            date.setDate(date.getDate() + (day - 1));
+            const mDate = `${date.getMonth() + 1}/${date.getDate()}`;
+
+            const hasFocus = focusApps.includes(day);
+
+            return (
+              <div
+                key={day}
+                className={"daycell" + (isToday ? " today" : "") + (isSunday ? " sunday" : "") + (isFuture ? " future" : "")}
+                style={hasFocus ? {outline: "2px solid var(--accent)", outlineOffset: -1, zIndex: 1} : null}
+              >
+                <div className="daycell-date">
+                  <span>D{day} · {mDate}</span>
+                  <span className="dow">{isSunday ? "バ" : "稼"}</span>
+                </div>
+                <div style={{display: "flex", flexWrap: "wrap", gap: 3}}>
+                  {cards.map((c, i) => {
+                    const isFocusCard = c.c === focusCard;
+                    const cls = c.intro ? "new" : `rev-${Math.min(3, c.rep)}`;
+                    return (
+                      <span
+                        key={i}
+                        className={"minicard " + cls}
+                        onClick={(e) => {
+                          if (e.shiftKey) { setFocusCard(c.c); return; }
+                          setFocusCard(c.c);
+                          openProblem && openProblem(c.c, c.rep);
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          outline: isFocusCard ? "1.5px solid var(--accent)" : undefined,
+                          outlineOffset: 1,
+                        }}
+                        title={`カード #${c.c} (${cardToProblem(c.c).year} 問${cardToProblem(c.c).q}) — ${c.intro ? "導入" : `${c.rep}回目復習`}\nクリックで問題を開く / Shift+クリックでフォーカスのみ`}
+                      >
+                        {c.c}{c.intro && <strong> ✦</strong>}
+                      </span>
+                    );
+                  })}
+                </div>
+                {isPast && (
+                  <div style={{position: "absolute", bottom: 4, right: 6, fontSize: 9, color: "var(--ok)", fontFamily: "var(--mono)"}}>✓</div>
+                )}
+              </div>
+            );
+          })}
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div style={{display: "flex", gap: 14, marginTop: 14, alignItems: "center", flexWrap: "wrap"}}>
+          <span className="muted" style={{fontSize: 11}}>凡例</span>
+          <span style={{display: "flex", alignItems: "center", gap: 4, fontSize: 11.5}}>
+            <span className="minicard new">15</span> 新規導入
+          </span>
+          <span style={{display: "flex", alignItems: "center", gap: 4, fontSize: 11.5}}>
+            <span className="minicard rev-1">7</span> 復習
+          </span>
+          <span style={{display: "flex", alignItems: "center", gap: 4, fontSize: 11.5}}>
+            <span className="muted">バ</span> = バッファ日 (日曜)
+          </span>
+          <span style={{fontSize: 11, color: "var(--muted)"}}>
+            ミニカードをクリックで問題を開く / Shift+クリックでフォーカスのみ
+          </span>
+          <span style={{marginLeft: "auto", fontSize: 11.5, color: "var(--accent-ink)"}}>
+            カード <span className="num">#{focusCard}</span> をハイライト中
+          </span>
+        </div>
+      </div>
+
+      {/* Focus card detail */}
+      <div className="row" style={{gap: 16}}>
+        <div className="card" style={{flex: 1.3}}>
+          <div className="card-head card-head-wrap">
+            <h3>カード詳細 #{focusCard}</h3>
+            <div className="card-nav" style={{display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap"}}>
+              <button className="btn sm primary" onClick={() => openProblem && openProblem(focusCard, Math.max(0, focusAppearances.filter(a => a.day < TODAY_DAY_NUMBER).length))}>
+                <Icon name="book" size={11}/> 問題を開く
+              </button>
+              <span style={{width: 1, height: 18, background: "var(--border)", margin: "0 4px"}}/>
+              <button className="btn sm" onClick={() => setFocusCard(Math.max(1, focusCard - 1))}>←</button>
+              <input
+                type="number"
+                value={focusCard}
+                min="1" max="400"
+                onChange={e => setFocusCard(Math.max(1, Math.min(400, +e.target.value || 1)))}
+                style={{
+                  width: 60,
+                  padding: "4px 8px",
+                  border: "1px solid var(--border-strong)",
+                  borderRadius: 4,
+                  textAlign: "center",
+                  fontFamily: "var(--mono)",
+                }}
+              />
+              <button className="btn sm" onClick={() => setFocusCard(focusCard + 1)}>→</button>
+            </div>
+          </div>
+
+          <div className="card-stats" style={{display: "flex", flexWrap: "wrap", gap: 20, padding: "14px 0", borderBottom: "1px solid var(--border)", marginBottom: 14}}>
+            <div className="stat-cell">
+              <div className="muted" style={{fontSize: 11}}>原問</div>
+              <div style={{fontSize: 22, fontWeight: 600}} className="num">
+                問{cardToProblem(focusCard).q} <span style={{fontSize: 14, color: "var(--muted)", fontWeight: 400}}>({cardToProblem(focusCard).year})</span>
+              </div>
+            </div>
+            <div className="stat-cell stat-cell-divider">
+              <div className="muted" style={{fontSize: 11}}>導入日</div>
+              <div className="num" style={{fontSize: 22, fontWeight: 600}}>Day {introDay(focusCard)}</div>
+            </div>
+            <div className="stat-cell stat-cell-divider">
+              <div className="muted" style={{fontSize: 11}}>完了回数</div>
+              <div className="num" style={{fontSize: 22, fontWeight: 600}}>
+                {Math.max(0, focusAppearances.filter(a => a.day < TODAY_DAY_NUMBER).length)} <span style={{fontSize: 13, color: "var(--muted)", fontWeight: 400}}>/ 6</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="label" style={{marginBottom: 10}}>出現スケジュール</div>
+          <div className="timeline">
+            {focusAppearances.slice(0, 7).map((a, i) => {
+              const past = a.day < TODAY_DAY_NUMBER;
+              const today = a.day === TODAY_DAY_NUMBER;
+              return (
+                <div className="tl-item" key={i}>
+                  <span className={"tl-dot " + (today ? "now" : past ? "done" : "")}/>
+                  <div style={{flex: 1, display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                    <div>
+                      <div style={{fontWeight: 500, fontSize: 13}}>
+                        {a.rep === 0 ? "導入" : `${a.rep}回目の復習`}
+                        {today && <span className="chip accent" style={{marginLeft: 8}}>今日</span>}
+                      </div>
+                      <div className="muted num" style={{fontSize: 11}}>
+                        Day {a.day} · {(() => {
+                          const d = new Date(START_DATE);
+                          d.setDate(d.getDate() + a.day - 1);
+                          return d.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric", weekday: "short" });
+                        })()}
+                      </div>
+                    </div>
+                    {past && (
+                      <span className={"chip " + (i === 0 ? "ok" : i === 4 ? "warn" : "ok")}>
+                        {i === 0 ? "導入正答" : i === 4 ? "迷い" : "復習正答"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Year matrix */}
+        <div className="card" style={{flex: 1}}>
+          <div className="card-head">
+            <h3>16年×25問マトリクス</h3>
+            <span className="muted" style={{fontSize: 11}}>カード番号の年度内分布</span>
+          </div>
+          <YearMatrix focusCard={focusCard} onPick={setFocusCard}/>
+
+          <div style={{marginTop: 14, padding: 10, background: "var(--surface-2)", borderRadius: 6, fontSize: 11.5, lineHeight: 1.6}}>
+            <strong>逆引き式</strong> <span className="num muted">(§5.1 ルール⓪)</span><br/>
+            <span className="num">年度</span> = 2010 + ⌊(c−1) / 25⌋<br/>
+            <span className="num">問番号</span> = ((c−1) mod 25) + 1
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const YearMatrix = ({ focusCard, onPick }) => {
+  const years = Array.from({length: 16}, (_, i) => 2010 + i);
+  // 16 years × 25 problems. Render compact grid.
+  return (
+    <div className="ymatrix-scroll">
+    <div className="ymatrix-inner">
+      {/* Column header (problem numbers 1..25) — just abbreviate */}
+      <div style={{display: "grid", gridTemplateColumns: "32px repeat(25, 1fr)", gap: 1, alignItems: "center"}}>
+        <div></div>
+        {Array.from({length: 25}, (_, i) => (
+          <div key={i} className="num" style={{fontSize: 8.5, color: "var(--faint)", textAlign: "center"}}>{(i + 1) % 5 === 1 || i === 24 ? i + 1 : "·"}</div>
+        ))}
+      </div>
+      {years.map((y, yi) => (
+        <div key={y} style={{display: "grid", gridTemplateColumns: "32px repeat(25, 1fr)", gap: 1, alignItems: "center", marginTop: 1}}>
+          <div className="num muted" style={{fontSize: 9.5, textAlign: "right", paddingRight: 4}}>{y}</div>
+          {Array.from({length: 25}, (_, qi) => {
+            const c = yi * 25 + qi + 1;
+            const introd = introDay(c) <= TODAY_DAY_NUMBER;
+            const reviewing = introDay(c) <= TODAY_DAY_NUMBER && introDay(c) > TODAY_DAY_NUMBER - 32;
+            const isFocus = c === focusCard;
+            let bg = "var(--surface-2)";
+            if (introd) {
+              bg = "oklch(0.78 0.08 200)";
+              if (introDay(c) > TODAY_DAY_NUMBER - 7) bg = "oklch(0.55 0.11 200)";
+            }
+            return (
+              <button
+                key={qi}
+                onClick={() => onPick(c)}
+                title={`#${c} = 問${qi + 1}(${y})`}
+                style={{
+                  height: 10, padding: 0, border: "none",
+                  background: bg,
+                  borderRadius: 1.5,
+                  cursor: "pointer",
+                  outline: isFocus ? "1.5px solid var(--ink)" : "none",
+                  outlineOffset: 1,
+                  position: "relative",
+                  zIndex: isFocus ? 2 : 1,
+                }}
+              />
+            );
+          })}
+        </div>
+      ))}
+
+      <div style={{display: "flex", gap: 10, marginTop: 14, fontSize: 10.5, alignItems: "center"}}>
+        <span className="muted">凡例</span>
+        <span style={{display: "flex", alignItems: "center", gap: 4}}>
+          <div style={{width: 12, height: 10, background: "var(--surface-2)", borderRadius: 2}}/> 未導入
+        </span>
+        <span style={{display: "flex", alignItems: "center", gap: 4}}>
+          <div style={{width: 12, height: 10, background: "oklch(0.78 0.08 200)", borderRadius: 2}}/> 導入済
+        </span>
+        <span style={{display: "flex", alignItems: "center", gap: 4}}>
+          <div style={{width: 12, height: 10, background: "oklch(0.55 0.11 200)", borderRadius: 2}}/> 直近7日
+        </span>
+      </div>
+    </div>
+    </div>
+  );
+};
+
+Object.assign(window, { CardSchedule });
+
+
+// ===== pastexams =====
+// ===== Past exams screen: B-1 grid + B-2 themes =====
+
+const PastExams = ({ goto }) => {
+  const [tab, setTab] = React.useState("b2"); // "b1" or "b2"
+
+  return (
+    <>
+      <PageHead
+        crumb="演習 / 過去問進捗"
+        title="過去問進捗"
+        sub="科目B-1 (16年 × 3問、年2問選択で32問) と科目B-2 (23テーマ × 10工数) の対象問題の消化状況。"
+        right={
+          <div className="seg">
+            <button className={tab === "b2" ? "on" : ""} onClick={() => setTab("b2")}>科目B-2</button>
+            <button className={tab === "b1" ? "on" : ""} onClick={() => setTab("b1")}>科目B-1</button>
+          </div>
+        }
+      />
+
+      {tab === "b2" ? <B2View/> : <B1View/>}
+    </>
+  );
+};
+
+const B2View = () => {
+  const [hovered, setHovered] = React.useState(null);
+  const sa = B2_PROGRESS.filter(t => t.group === "SA");
+  const es = B2_PROGRESS.filter(t => t.group === "ES");
+
+  const totalKosuu = B2_PROGRESS.length * 10;
+  const doneKosuu = B2_PROGRESS.reduce((acc, t) => acc + t.done, 0);
+
+  return (
+    <>
+      {/* KPI strip */}
+      <div className="grid-4" style={{marginBottom: 18}}>
+        <div className="card">
+          <KPI label="B-2 完了テーマ" value={`${B2_PROGRESS.filter(t => t.done === 10).length}`} unit={` / ${B2_PROGRESS.length}`}/>
+          <div className="bar" style={{marginTop: 10}}><div style={{width: `${B2_PROGRESS.filter(t => t.done === 10).length / B2_PROGRESS.length * 100}%`}}/></div>
+        </div>
+        <div className="card">
+          <KPI label="消化工数" value={doneKosuu} unit={` / ${totalKosuu}`}/>
+          <div className="bar" style={{marginTop: 10}}><div style={{width: `${doneKosuu/totalKosuu*100}%`, background: "var(--accent)"}}/></div>
+        </div>
+        <div className="card">
+          <KPI label="現在の取組" value="平22秋 問3" delta="状況組み立て5" deltaDir="flat"/>
+          <div className="muted" style={{fontSize: 11, marginTop: 6, lineHeight: 1.5}}>機能分担について</div>
+        </div>
+        <div className="card">
+          <KPI label="完答率" value="100" unit="%" delta="目標達成" deltaDir="up"/>
+          <div className="muted" style={{fontSize: 11, marginTop: 6}}>過去4週連続</div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="card" style={{padding: "12px 18px", marginBottom: 18, display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap"}}>
+        <div className="label">テーマ × 10工数</div>
+        <span style={{display: "flex", alignItems: "center", gap: 5, fontSize: 11.5}}>
+          <div style={{width: 14, height: 14, background: "var(--ink)", borderRadius: 2}}/> 完了
+        </span>
+        <span style={{display: "flex", alignItems: "center", gap: 5, fontSize: 11.5}}>
+          <div style={{width: 14, height: 14, background: "var(--accent)", borderRadius: 2}}/> 進行中
+        </span>
+        <span style={{display: "flex", alignItems: "center", gap: 5, fontSize: 11.5}}>
+          <div style={{width: 14, height: 14, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 2}}/> 未着手
+        </span>
+        <span style={{marginLeft: "auto", fontSize: 11.5, color: "var(--muted)"}}>
+          状況組み立て1 → 7 → 設問1 → 2 → 3 の順
+        </span>
+      </div>
+
+      {/* SA themes */}
+      <div className="card" style={{marginBottom: 18}}>
+        <div className="card-head">
+          <h3>システムアーキテクト試験 出題 <span className="muted" style={{fontWeight: 400, marginLeft: 6}}>(SA・14テーマ)</span></h3>
+          <span className="chip">対象 §4.1</span>
+        </div>
+        <B2ThemeList themes={sa} hovered={hovered} setHovered={setHovered}/>
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h3>エンベデッドシステムスペシャリスト試験 出題 <span className="muted" style={{fontWeight: 400, marginLeft: 6}}>(ES・9テーマ)</span></h3>
+          <span className="chip">対象 §4.2</span>
+        </div>
+        <B2ThemeList themes={es} hovered={hovered} setHovered={setHovered}/>
+      </div>
+    </>
+  );
+};
+
+const B2ThemeList = ({ themes, hovered, setHovered }) => (
+  <div style={{display: "flex", flexDirection: "column"}}>
+    {themes.map((t, i) => (
+      <div
+        key={i}
+        className="b2-row"
+        style={{
+          padding: "10px 0",
+          borderTop: i === 0 ? "none" : "1px solid var(--border)",
+        }}
+      >
+        <div className="b2-meta">
+          <div className="num" style={{fontSize: 12, color: "var(--muted)"}}>{t.era}</div>
+          <div className="num" style={{fontWeight: 600, fontSize: 14}}>問{t.q}</div>
+        </div>
+
+        <div className="b2-theme">
+          <div style={{fontSize: 13, lineHeight: 1.5}}>{t.theme}</div>
+          <div style={{marginTop: 4, display: "flex", gap: 8, alignItems: "center", fontSize: 11.5, color: "var(--muted)", flexWrap: "wrap"}}>
+            {t.done === 10 ? <span className="chip ok">完了</span> :
+             t.done > 0 ? <span className="chip accent">進行中 ({t.done}/10)</span> :
+             <span className="chip">未着手</span>}
+            {t.done > 0 && t.done < 10 && <span>次: {B2_KOSUU_LABELS[t.done]}</span>}
+          </div>
+        </div>
+
+        {/* 10 dots for 工数 */}
+        <div className="b2-dots">
+          {B2_KOSUU_LABELS.map((label, k) => {
+            const done = k < t.done;
+            const current = k === t.done && t.done < 10;
+            const isSetsumon = k >= 7;
+            return (
+              <div
+                key={k}
+                onMouseEnter={() => setHovered({theme: t.theme, kosuu: label})}
+                onMouseLeave={() => setHovered(null)}
+                style={{
+                  flex: 1,
+                  height: 22,
+                  background: done ? "var(--ink)" : current ? "var(--accent)" : "var(--surface-2)",
+                  border: "1px solid " + (done ? "var(--ink)" : current ? "var(--accent)" : "var(--border)"),
+                  borderRadius: 3,
+                  position: "relative",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+                title={`${t.theme} — ${label}`}
+              >
+                {k === 6 && (
+                  <div style={{
+                    position: "absolute", right: -2, top: -2, bottom: -2,
+                    width: 1, background: "var(--border-strong)",
+                  }}/>
+                )}
+                {isSetsumon && (
+                  <div style={{position: "absolute", inset: 0, display: "grid", placeItems: "center"}}>
+                    <div className="num" style={{
+                      fontSize: 9, color: done ? "var(--bg)" : current ? "white" : "var(--muted)", fontWeight: 600
+                    }}>{k - 6}</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const B1View = () => {
+  // Build a 16-year × 3-problem grid. Mark selected/done from B1_PROGRESS_SELECTED.
+  const selectedMap = {};
+  B1_PROGRESS_SELECTED.forEach(s => {
+    selectedMap[`${s.yearIdx}-${s.q}`] = s;
+  });
+
+  return (
+    <>
+      {/* KPI strip */}
+      <div className="grid-4" style={{marginBottom: 18}}>
+        <div className="card">
+          <KPI label="実施済み問題" value={B1_PROGRESS_SELECTED.length} unit={` / 32`}/>
+          <div className="bar" style={{marginTop: 10}}><div style={{width: `${B1_PROGRESS_SELECTED.length / 32 * 100}%`, background: "var(--accent)"}}/></div>
+        </div>
+        <div className="card">
+          <KPI label="設問正答率" value="66" unit="%" delta="+6pt 先週比" deltaDir="up"/>
+          <div className="muted" style={{fontSize: 11, marginTop: 6}}>目標 70% まで -4pt</div>
+        </div>
+        <div className="card">
+          <KPI label="平均所要時間" value="48" unit="分" delta="-10分 先月比" deltaDir="up"/>
+          <div className="muted" style={{fontSize: 11, marginTop: 6}}>目標 45 分以内</div>
+        </div>
+        <div className="card">
+          <KPI label="次回セッション" value="5/26" delta="火曜" deltaDir="flat"/>
+          <div className="muted" style={{fontSize: 11, marginTop: 6}}>平24年度春期 問3 予定</div>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div className="card">
+        <div className="card-head">
+          <h3>16年度 × 3問 (年2問選択)</h3>
+          <span className="muted" style={{fontSize: 11}}>火・木・土に実施 · 古い年度から消化</span>
+        </div>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "auto repeat(3, 1fr)",
+          gap: 6,
+          marginTop: 12,
+        }}>
+          <div></div>
+          {[1, 2, 3].map(q => (
+            <div key={q} className="label" style={{textAlign: "center", padding: "6px 0"}}>問{q}</div>
+          ))}
+
+          {B1_YEARS.map((y, yi) => (
+            <React.Fragment key={y.year}>
+              <div style={{padding: "0 12px 0 0", textAlign: "right", fontSize: 12, color: "var(--ink-2)"}}>
+                <span style={{fontWeight: 500}}>{y.era}</span>
+                <span className="muted num" style={{marginLeft: 6, fontSize: 10.5}}>{y.year}{y.season}</span>
+              </div>
+              {[1, 2, 3].map(q => {
+                const k = `${yi}-${q}`;
+                const sel = selectedMap[k];
+                const future = !sel && B1_PROGRESS_SELECTED.length > 0 && yi > Math.max(...B1_PROGRESS_SELECTED.map(s => s.yearIdx));
+
+                let bg = "var(--surface-2)";
+                let color = "var(--muted)";
+                let label = "—";
+                let border = "1px solid var(--border)";
+                if (sel) {
+                  bg = sel.score >= 0.7 ? "var(--ink)" : sel.score >= 0.55 ? "oklch(0.55 0.11 200)" : "oklch(0.65 0.16 25)";
+                  color = "white";
+                  label = `${Math.round(sel.score * 100)}%`;
+                  border = "1px solid " + bg;
+                }
+
+                return (
+                  <div
+                    key={q}
+                    style={{
+                      background: bg,
+                      color: color,
+                      border: border,
+                      borderRadius: 6,
+                      padding: "10px 12px",
+                      minHeight: 52,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      cursor: sel ? "pointer" : "default",
+                      opacity: future ? 0.5 : 1,
+                    }}
+                  >
+                    {sel ? (
+                      <>
+                        <div className="num" style={{fontSize: 18, fontWeight: 600}}>{label}</div>
+                        <div style={{fontSize: 10.5, opacity: 0.8, marginTop: 2}}>3設問中 {Math.round(sel.score * 3)} 正答</div>
+                      </>
+                    ) : (
+                      <div style={{fontSize: 12, color: "var(--muted)"}}>未実施</div>
+                    )}
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+
+        <div style={{display: "flex", gap: 14, marginTop: 18, fontSize: 11.5, alignItems: "center"}}>
+          <span className="muted">凡例</span>
+          <span style={{display: "flex", alignItems: "center", gap: 5}}>
+            <div style={{width: 14, height: 14, background: "var(--ink)", borderRadius: 2}}/> 70%+
+          </span>
+          <span style={{display: "flex", alignItems: "center", gap: 5}}>
+            <div style={{width: 14, height: 14, background: "oklch(0.55 0.11 200)", borderRadius: 2}}/> 55-69%
+          </span>
+          <span style={{display: "flex", alignItems: "center", gap: 5}}>
+            <div style={{width: 14, height: 14, background: "oklch(0.65 0.16 25)", borderRadius: 2}}/> 55%未満
+          </span>
+          <span style={{display: "flex", alignItems: "center", gap: 5}}>
+            <div style={{width: 14, height: 14, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 2}}/> 未実施
+          </span>
+        </div>
+      </div>
+    </>
+  );
+};
+
+Object.assign(window, { PastExams });
+
+
+// ===== reviews =====
+// ===== Weekly + Monthly review + Weak map screens =====
+
+const WeeklyReview = ({ goto }) => {
+  const [step, setStep] = React.useState(1);
+  const [actions, setActions] = React.useState([
+    { text: "火・木の科目B-1で『割り込み処理』を含む問題を優先選択する", category: "理解不足" },
+    { text: "B-2 設問ウで『評価・拡張』を毎回必ず1段落書く", category: "B-2構成" },
+    { text: "", category: "" },
+  ]);
+
+  return (
+    <>
+      <PageHead
+        crumb="レビュー / 週次"
+        title="週次レビュー · 5/18 — 5/24"
+        sub="毎週日曜の終わりに30分。「測る → ふりかえる → うごかす」の3ステップ。"
+        right={
+          <div className="seg">
+            {[1, 2, 3].map(s => (
+              <button key={s} className={step === s ? "on" : ""} onClick={() => setStep(s)}>
+                {s === 1 ? "① 測る" : s === 2 ? "② ふりかえる" : "③ うごかす"}
+              </button>
+            ))}
+          </div>
+        }
+      />
+
+      {step === 1 && (
+        <>
+          <div className="card" style={{marginBottom: 16}}>
+            <div className="card-head">
+              <h3>定量指標 — 今週の現状把握</h3>
+              <span className="muted" style={{fontSize: 11}}>初見正答率と復習正答率は分けて測る</span>
+            </div>
+
+            <div className="review-grid">
+              <div className="head">指標</div>
+              <div className="head">第1週</div>
+              <div className="head">第2週</div>
+              <div className="head">第3週</div>
+              <div className="head">第4週</div>
+              <div className="head">傾向</div>
+
+              {[
+                { label: "A-2 初見正答率", vals: [0.55, 0.62, 0.70, 0.74], trend: "up", target: "70%+" },
+                { label: "A-2 復習正答率", vals: [0.78, 0.82, 0.86, 0.88], trend: "up", target: "90%+" },
+                { label: "B-1 設問正答率", vals: [0.50, 0.55, 0.60, 0.66], trend: "up", target: "70%+" },
+                { label: "B-1 解答時間", vals: [58, 53, 50, 48], trend: "down-good", target: "≤45分", unit: "分" },
+                { label: "B-2 完答率", vals: [1.0, 1.0, 1.0, 1.0], trend: "flat", target: "100%" },
+                { label: "学習時間", vals: [12.0, 12.7, 13.7, 14.2], trend: "up", target: "—", unit: "h" },
+              ].map((row, i) => (
+                <React.Fragment key={i}>
+                  <div>
+                    <div style={{fontWeight: 500, fontSize: 12.5}}>{row.label}</div>
+                    <div className="muted" style={{fontSize: 10.5}}>目標 {row.target}</div>
+                  </div>
+                  {row.vals.map((v, j) => (
+                    <div key={j} className="num" style={{fontSize: 13, textAlign: "right", color: j === 3 ? "var(--ink)" : "var(--muted)", fontWeight: j === 3 ? 600 : 400}}>
+                      {row.unit === "分" || row.unit === "h" ? `${v}${row.unit}` : `${Math.round(v * 100)}%`}
+                    </div>
+                  ))}
+                  <div style={{display: "grid", placeItems: "center", fontSize: 16, color: row.trend === "up" || row.trend === "down-good" ? "var(--ok)" : row.trend === "down" ? "var(--danger)" : "var(--muted)"}}>
+                    {row.trend === "up" ? "↑" : row.trend === "down" ? "↓" : row.trend === "down-good" ? "↓" : "→"}
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          <div className="row" style={{gap: 16}}>
+            <div className="card" style={{flex: 1}}>
+              <div className="card-head">
+                <h3>所感メモ</h3>
+                <span className="muted" style={{fontSize: 11}}>気づいたこと</span>
+              </div>
+              <textarea
+                defaultValue="A-2 復習正答率が +2pt で目標まであと 2pt。RM スケジューリングの優先度逆転は3週連続で出題された問題で誤答。B-1 は時間が安定して短縮。"
+                style={{
+                  width: "100%", minHeight: 100,
+                  padding: 10, border: "1px solid var(--border)",
+                  borderRadius: 6, fontFamily: "inherit", fontSize: 13,
+                  background: "var(--surface-2)", resize: "vertical", lineHeight: 1.6,
+                }}
+              />
+            </div>
+            <div className="card" style={{flex: 1}}>
+              <div className="card-head">
+                <h3>エスカレーション判定</h3>
+                <span className="muted" style={{fontSize: 11}}>計画見直しの基準</span>
+              </div>
+              <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", padding: 10, background: "var(--ok-soft)", borderRadius: 6, border: "1px solid oklch(0.86 0.05 150)"}}>
+                  <div>
+                    <div style={{fontSize: 12.5, fontWeight: 500}}>2週連続で実施率80%未満</div>
+                    <div className="muted" style={{fontSize: 11}}>今週 96%・先週 94%</div>
+                  </div>
+                  <span className="chip ok">OK</span>
+                </div>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", padding: 10, background: "var(--warn-soft)", borderRadius: 6, border: "1px solid oklch(0.86 0.06 80)"}}>
+                  <div>
+                    <div style={{fontSize: 12.5, fontWeight: 500}}>4週連続で同じ論点を間違えている</div>
+                    <div className="muted" style={{fontSize: 11}}>RM スケジューリング → 3週連続</div>
+                  </div>
+                  <span className="chip warn">注意</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          <div className="card" style={{marginBottom: 16}}>
+            <div className="card-head">
+              <h3>ミスのカテゴリ分類</h3>
+              <span className="muted" style={{fontSize: 11}}>今週の誤答を3カテゴリに振り分け</span>
+            </div>
+
+            <div className="grid-3">
+              {[
+                { name: "知識不足型", desc: "そもそも知らなかった", n: 3, color: "oklch(0.65 0.16 25)" },
+                { name: "理解不足型", desc: "知っていたが、設問の文脈と結びつかなかった", n: 5, color: "oklch(0.7 0.13 75)" },
+                { name: "ケアレス型", desc: "読み落とし、字数オーバー、誤字、転記ミス", n: 2, color: "oklch(0.55 0.11 200)" },
+              ].map((c, i) => (
+                <div key={i} style={{
+                  padding: 16,
+                  background: c.color,
+                  color: "white",
+                  borderRadius: 10,
+                  position: "relative",
+                }}>
+                  <div style={{fontSize: 12, opacity: 0.85, letterSpacing: "0.04em"}}>{c.name}</div>
+                  <div className="num" style={{fontSize: 36, fontWeight: 600, lineHeight: 1, marginTop: 6}}>{c.n} <span style={{fontSize: 13, opacity: 0.8}}>件</span></div>
+                  <div style={{fontSize: 11.5, opacity: 0.85, marginTop: 8, lineHeight: 1.5}}>{c.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{marginTop: 16, padding: 14, background: "var(--warn-soft)", border: "1px solid oklch(0.86 0.06 80)", borderRadius: 8}}>
+              <div style={{fontSize: 12.5, fontWeight: 600, color: "oklch(0.4 0.11 70)"}}>
+                <Icon name="spark" size={12}/> パターン警告 — 「理解不足型」が2週連続で最多
+              </div>
+              <div style={{fontSize: 12, color: "oklch(0.4 0.11 70)", marginTop: 6, lineHeight: 1.6}}>
+                3週連続で同じカテゴリが上位なら計画的に対策を打ちます。対策候補:<br/>
+                • 教材の追加 (組込みリアルタイムOS のテキスト精読)<br/>
+                • 解答プロセスの見直し (設問文を読む前にシナリオの3要素を抽出)<br/>
+                • セルフチェック手順の導入 (設問→根拠→キーワード の3段確認)
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <div className="card" style={{marginBottom: 16}}>
+            <div className="card-head">
+              <h3>翌週の打ち手 — 最大3つ</h3>
+              <span className="muted" style={{fontSize: 11}}>これ以上は実行されない</span>
+            </div>
+
+            <div style={{
+              background: "var(--surface-2)",
+              padding: "10px 14px",
+              borderRadius: 6,
+              fontSize: 12,
+              color: "var(--muted)",
+              marginBottom: 14,
+              lineHeight: 1.7,
+            }}>
+              <span style={{color: "var(--danger)"}}>❌</span> 「割り込みの理解を深める」 (具体性なし)<br/>
+              <span style={{color: "var(--ok)"}}>⭕</span> 「火・木の科目B-1で『割り込み処理』を含む問題を優先選択する」
+            </div>
+
+            {actions.map((a, i) => (
+              <div key={i} style={{display: "flex", gap: 10, marginTop: 10, alignItems: "flex-start"}}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: a.text ? "var(--ink)" : "var(--surface-2)",
+                  color: a.text ? "var(--bg)" : "var(--muted)",
+                  display: "grid", placeItems: "center",
+                  fontFamily: "var(--mono)", fontWeight: 600, fontSize: 12,
+                  flexShrink: 0, marginTop: 2,
+                  border: a.text ? "none" : "1px dashed var(--border-strong)",
+                }}>{i + 1}</div>
+                <div style={{flex: 1}}>
+                  <input
+                    value={a.text}
+                    onChange={e => {
+                      const copy = [...actions];
+                      copy[i] = { ...copy[i], text: e.target.value };
+                      setActions(copy);
+                    }}
+                    placeholder="具体的な行動を1行で..."
+                    style={{
+                      width: "100%",
+                      padding: "8px 10px",
+                      border: "1px solid var(--border)",
+                      borderRadius: 5,
+                      fontFamily: "inherit",
+                      fontSize: 13,
+                      background: a.text ? "var(--surface)" : "var(--surface-2)",
+                    }}
+                  />
+                  {a.category && (
+                    <div className="muted" style={{fontSize: 10.5, marginTop: 3, paddingLeft: 4}}>
+                      対応する弱点: {a.category}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <h3>バッファ運用 — 来週の日曜</h3>
+              <span className="muted" style={{fontSize: 11}}>優先順位順</span>
+            </div>
+            <ol style={{margin: 0, paddingLeft: 20, fontSize: 13, lineHeight: 1.9}}>
+              <li>
+                平日に未消化となった項目の実施
+                <span className="muted" style={{fontSize: 11.5, marginLeft: 8}}>予定: <span className="num">0</span> 件</span>
+              </li>
+              <li>
+                復習正答率が80%未満だったカードの追加復習
+                <span className="muted" style={{fontSize: 11.5, marginLeft: 8}}>該当: <span className="num">2</span> 枚 (問4, 問7)</span>
+              </li>
+              <li>
+                その週で「分からなかった概念」のキャッチアップ
+                <span className="muted" style={{fontSize: 11.5, marginLeft: 8}}>候補: 優先度逆転 / セキュア・ブート</span>
+              </li>
+            </ol>
+
+            <div className="divider"/>
+
+            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+              <div>
+                <div style={{fontSize: 12.5, fontWeight: 600}}>レビュー所要時間</div>
+                <div className="muted num" style={{fontSize: 11}}>26 分 / 目標 30 分</div>
+              </div>
+              <button className="btn primary"><Icon name="check" size={13}/> 週次レビューを確定して保存</button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+};
+
+const MonthlyReview = ({ goto }) => {
+  return (
+    <>
+      <PageHead
+        crumb="レビュー / 月次"
+        title="月次レビュー · 2026年5月"
+        sub="月次は『戦略』。トレンドを見て、来月の重点を「やる/やらない」で宣言する。"
+        right={<button className="btn primary">月次レビューを確定</button>}
+      />
+
+      {/* §7.1 trends */}
+      <div className="card" style={{marginBottom: 16}}>
+        <div className="card-head">
+          <h3>週次指標の月次集計</h3>
+          <span className="muted" style={{fontSize: 11}}>↓が続く指標は原因を特定</span>
+        </div>
+
+        <div className="review-grid">
+          <div className="head">指標</div>
+          <div className="head">第1週</div>
+          <div className="head">第2週</div>
+          <div className="head">第3週</div>
+          <div className="head">第4週</div>
+          <div className="head">傾向</div>
+
+          {[
+            { label: "A-2 初見正答率", v: [0.55, 0.62, 0.70, 0.74] },
+            { label: "A-2 復習正答率", v: [0.78, 0.82, 0.86, 0.88] },
+            { label: "B-1 設問正答率", v: [0.50, 0.55, 0.60, 0.66] },
+            { label: "B-2 完答率",     v: [1.0, 1.0, 1.0, 1.0] },
+            { label: "学習時間 (h)",   v: [12.0, 12.7, 13.7, 14.2], hours: true },
+          ].map((row, i) => (
+            <React.Fragment key={i}>
+              <div style={{fontWeight: 500, fontSize: 12.5}}>{row.label}</div>
+              {row.v.map((x, j) => (
+                <div key={j} className="num" style={{textAlign: "right", color: j === 3 ? "var(--ink)" : "var(--muted)", fontWeight: j === 3 ? 600 : 400, fontSize: 13}}>
+                  {row.hours ? `${x}h` : `${Math.round(x*100)}%`}
+                </div>
+              ))}
+              <div style={{display: "grid", placeItems: "center", fontSize: 16, color: "var(--ok)"}}>↑</div>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* §7.2 grading */}
+      <div className="row" style={{marginBottom: 16, gap: 16, alignItems: "flex-start"}}>
+        <div className="card" style={{flex: 1.4}}>
+          <div className="card-head">
+            <h3>区分ごとの到達度判定</h3>
+            <span className="muted" style={{fontSize: 11}}>A / B / C</span>
+          </div>
+          {[
+            { subj: "科目A-2", grade: "B", desc: "初見正答率 70-80%", upto: "初見 80% 突破まで RM スケジューリングを潰す" },
+            { subj: "科目B-1", grade: "B", desc: "設問正答率 60-75%", upto: "解答時間 45分以内に収める" },
+            { subj: "科目B-2", grade: "B", desc: "完答 + 構成評価良", upto: "設問ウの『評価・拡張』を毎回必ず書く" },
+          ].map((g, i) => (
+            <div key={i} style={{
+              display: "grid",
+              gridTemplateColumns: "100px 50px 1fr",
+              padding: "12px 0",
+              borderTop: i > 0 ? "1px solid var(--border)" : "none",
+              alignItems: "center",
+              gap: 12,
+            }}>
+              <div style={{fontWeight: 600, fontSize: 13}}>{g.subj}</div>
+              <div style={{
+                width: 38, height: 38,
+                background: g.grade === "A" ? "var(--ok)" : g.grade === "B" ? "var(--warn)" : "var(--danger)",
+                color: "white", borderRadius: 8,
+                display: "grid", placeItems: "center",
+                fontFamily: "var(--serif)", fontWeight: 700, fontSize: 18,
+              }}>{g.grade}</div>
+              <div>
+                <div style={{fontSize: 12.5, color: "var(--ink-2)"}}>{g.desc}</div>
+                <div className="muted" style={{fontSize: 11, marginTop: 3}}>
+                  <strong style={{color: "var(--accent-ink)"}}>A に上げる条件:</strong> {g.upto}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* §7.4 残工数チェック */}
+        <div className="card" style={{flex: 1}}>
+          <div className="card-head">
+            <h3>残工数の逆算チェック</h3>
+            <span className="muted" style={{fontSize: 11}}>試験まで残り <span className="num">{Math.ceil(DAYS_TO_EXAM/7)}</span> 週</span>
+          </div>
+
+          <div className="num" style={{
+            background: "var(--surface-2)",
+            padding: "10px 14px", borderRadius: 6,
+            fontSize: 12.5,
+            color: "var(--ink-2)",
+            border: "1px solid var(--border)",
+          }}>
+            残週数 × 週工数 = 残利用可能工数
+          </div>
+
+          <div style={{padding: "14px 0", display: "flex", justifyContent: "space-between"}}>
+            <div>
+              <div className="muted" style={{fontSize: 11}}>残利用可能</div>
+              <div className="num" style={{fontSize: 22, fontWeight: 600}}>1,260 <span style={{fontSize: 12, color: "var(--muted)"}}>工数</span></div>
+            </div>
+            <div>
+              <div className="muted" style={{fontSize: 11}}>未消化計画</div>
+              <div className="num" style={{fontSize: 22, fontWeight: 600}}>980 <span style={{fontSize: 12, color: "var(--muted)"}}>工数</span></div>
+            </div>
+            <div>
+              <div className="muted" style={{fontSize: 11}}>余裕</div>
+              <div className="num" style={{fontSize: 22, fontWeight: 600, color: "var(--ok)"}}>+280</div>
+            </div>
+          </div>
+
+          <div className="bar"><div style={{width: "78%", background: "var(--ok)"}}/></div>
+
+          <div className="divider"/>
+
+          <div className="label" style={{marginBottom: 6}}>オーバー時の削減順</div>
+          <ol style={{margin: 0, paddingLeft: 18, fontSize: 11.5, lineHeight: 1.7, color: "var(--ink-2)"}}>
+            <li>「いっぺんに解く」過去2年分は<strong>削らない</strong></li>
+            <li>科目B-1の問題数を絞る</li>
+            <li>科目A-2 の低頻度論点を統合・スキップ</li>
+          </ol>
+        </div>
+      </div>
+
+      {/* §7.5 やる/やらない */}
+      <div className="row" style={{gap: 16}}>
+        <div className="card" style={{flex: 1, background: "linear-gradient(180deg, var(--ok-soft), var(--surface))"}}>
+          <div className="card-head">
+            <h3 style={{color: "oklch(0.38 0.11 150)"}}>来月の重点 (やる)</h3>
+            <span className="chip ok">3つまで</span>
+          </div>
+          {[
+            { t: "RM/EDF スケジューリングの完全理解", why: "3週連続で誤答中。A-2 初見正答率 70→80% に直結。" },
+            { t: "B-2 設問ウの『評価・拡張』を必ず1段落", why: "完答率は100%だが構成評価B のため。" },
+            { t: "B-1 解答時間 45分以内", why: "現在 48分。本番想定では時間切れリスク。" },
+          ].map((x, i) => (
+            <div key={i} style={{padding: "10px 0", borderTop: i > 0 ? "1px solid var(--border)" : "none"}}>
+              <div style={{display: "flex", gap: 10, alignItems: "flex-start"}}>
+                <span style={{
+                  width: 24, height: 24, borderRadius: "50%",
+                  background: "var(--ok)", color: "white",
+                  display: "grid", placeItems: "center",
+                  fontFamily: "var(--mono)", fontWeight: 600, fontSize: 12,
+                  flexShrink: 0,
+                }}>{i + 1}</span>
+                <div>
+                  <div style={{fontSize: 13.5, fontWeight: 500}}>{x.t}</div>
+                  <div className="muted" style={{fontSize: 11.5, marginTop: 3, lineHeight: 1.6}}>理由: {x.why}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="card" style={{flex: 1, background: "linear-gradient(180deg, var(--danger-soft), var(--surface))"}}>
+          <div className="card-head">
+            <h3 style={{color: "oklch(0.42 0.16 25)"}}>来月やらないこと</h3>
+            <span className="chip danger">明示する</span>
+          </div>
+          {[
+            { t: "新規教材の導入", why: "現有テキストの消化を優先。" },
+            { t: "B-2 H21〜H23 のテーマ再演習", why: "状況組み立て7まで完答済み。優先度低。" },
+            { t: "学習時間の上積み", why: "週14h で安定。質を上げるフェーズに移行。" },
+          ].map((x, i) => (
+            <div key={i} style={{padding: "10px 0", borderTop: i > 0 ? "1px solid var(--border)" : "none"}}>
+              <div style={{display: "flex", gap: 10, alignItems: "flex-start"}}>
+                <span style={{
+                  width: 24, height: 24, borderRadius: "50%",
+                  background: "var(--danger)", color: "white",
+                  display: "grid", placeItems: "center",
+                  fontWeight: 600, fontSize: 13,
+                  flexShrink: 0,
+                }}>×</span>
+                <div>
+                  <div style={{fontSize: 13.5, fontWeight: 500}}>{x.t}</div>
+                  <div className="muted" style={{fontSize: 11.5, marginTop: 3, lineHeight: 1.6}}>理由: {x.why}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
+const WeakMap = ({ goto }) => {
+  const grouped = {
+    resolved: WEAK_MAP.filter(w => w.status === "resolved"),
+    improving: WEAK_MAP.filter(w => w.status === "improving"),
+    active: WEAK_MAP.filter(w => w.status === "active"),
+    todo: WEAK_MAP.filter(w => w.status === "todo"),
+  };
+
+  const colMeta = {
+    resolved: { title: "解消", desc: "3問連続正答 / 自分の言葉で説明できる", color: "var(--ok)" },
+    improving: { title: "改善中", desc: "正答率が上向き", color: "var(--accent)" },
+    active: { title: "停滞", desc: "対策中だが指標が改善していない", color: "var(--warn)" },
+    todo: { title: "未着手", desc: "対策を打てていない", color: "var(--danger)" },
+  };
+
+  return (
+    <>
+      <PageHead
+        crumb="演習 / 弱点マップ"
+        title="弱点マップ"
+        sub="月初の弱点リストを「解消 / 改善中 / 停滞 / 未着手」に振り分け。未着手が3つ以上溜まったら翌月の重点に1つ含める。"
+        right={<button className="btn primary"><Icon name="plus" size={13}/> 弱点を追加</button>}
+      />
+
+      <div className="grid-4" style={{alignItems: "flex-start"}}>
+        {(["resolved", "improving", "active", "todo"]).map(k => (
+          <div key={k} className="card" style={{borderTop: `3px solid ${colMeta[k].color}`}}>
+            <div style={{paddingBottom: 10, borderBottom: "1px solid var(--border)", marginBottom: 10}}>
+              <div style={{display: "flex", alignItems: "baseline", justifyContent: "space-between"}}>
+                <div style={{fontWeight: 600, fontSize: 14}}>{colMeta[k].title}</div>
+                <div className="num" style={{fontSize: 18, fontWeight: 600, color: colMeta[k].color}}>{grouped[k].length}</div>
+              </div>
+              <div className="muted" style={{fontSize: 11, marginTop: 3, lineHeight: 1.5}}>{colMeta[k].desc}</div>
+            </div>
+
+            {grouped[k].map((w) => (
+              <div key={w.id} style={{
+                padding: 10, marginBottom: 8,
+                background: "var(--surface-2)", borderRadius: 6,
+                border: "1px solid var(--border)",
+              }}>
+                <div style={{fontSize: 12.5, fontWeight: 500, lineHeight: 1.45}}>{w.topic}</div>
+                <div style={{display: "flex", alignItems: "center", gap: 6, marginTop: 6}}>
+                  <SubjTag subj={w.subject}/>
+                  {w.note && <span className="muted" style={{fontSize: 10.5}}>{w.note}</span>}
+                </div>
+              </div>
+            ))}
+
+            {grouped[k].length === 0 && (
+              <div className="muted" style={{fontSize: 11.5, textAlign: "center", padding: "20px 0"}}>
+                該当なし
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Escalation hint */}
+      {grouped.todo.length >= 2 && (
+        <div className="card" style={{marginTop: 18, background: "var(--danger-soft)", borderColor: "oklch(0.84 0.07 25)"}}>
+          <div style={{display: "flex", gap: 12, alignItems: "flex-start"}}>
+            <Icon name="flag" size={18}/>
+            <div>
+              <div style={{fontWeight: 600, fontSize: 13.5, color: "oklch(0.4 0.14 25)"}}>
+                未着手が {grouped.todo.length} つ溜まっています
+              </div>
+              <div style={{fontSize: 12.5, color: "oklch(0.4 0.14 25)", marginTop: 6, lineHeight: 1.6}}>
+                ルールに従い、来月の重点に少なくとも1つ含めてください。<br/>
+                候補: <strong>セキュア・ブート / TPM</strong> または <strong>FPGA 設計</strong>
+              </div>
+              <div style={{display: "flex", gap: 8, marginTop: 10}}>
+                <button className="btn sm primary">来月の重点に追加</button>
+                <button className="btn sm" onClick={() => goto("monthly")}>月次レビューを開く</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+Object.assign(window, { WeeklyReview, MonthlyReview, WeakMap });
+
+
+// ===== app =====
+// ===== Main App =====
+
+const INITIAL_TASKS = [
+  {
+    subj: "A-2",
+    title: "問7 (2010) 復習 — 3回目",
+    detail: "通し番号 #7 · 復習間隔 +7日",
+    est: 8,
+    done: true,
+    cardC: 7,
+    rep: 3,
+  },
+  {
+    subj: "A-2",
+    title: "問11 (2010) 復習 — 2回目",
+    detail: "通し番号 #11 · 復習間隔 +3日",
+    est: 8,
+    done: true,
+    cardC: 11,
+    rep: 2,
+  },
+  {
+    subj: "A-2",
+    title: "問13 (2010) 導入 — 新規",
+    detail: "通し番号 #13 · 末尾の新規カード",
+    est: 14,
+    done: false,
+    cardC: 13,
+    rep: 0,
+  },
+  {
+    subj: "B-2",
+    title: "平22秋 問3 「ハードウェアとソフトウェアの機能分担」",
+    detail: "状況組み立て5 / 全10工数の5番目",
+    est: 25,
+    done: false,
+    theme: "ハードウェアとソフトウェアの機能分担",
+  },
+  {
+    subj: "復習",
+    title: "前週の未消化: 復習正答率80%未満の追加復習",
+    detail: "バッファから繰越 · 問4 と 問7 を含む",
+    est: 15,
+    done: false,
+  },
+];
+
+const App = () => {
+  const [screen, setScreen] = React.useState("dashboard");
+  const [tasks, setTasks] = React.useState(INITIAL_TASKS);
+  const [problemCtx, setProblemCtx] = React.useState({ cardC: 13, rep: 0 });
+
+  const toggleTask = (i) => {
+    setTasks(prev => prev.map((t, j) => j === i ? { ...t, done: !t.done } : t));
+  };
+
+  const openProblem = (cardC, rep = 0) => {
+    setProblemCtx({ cardC, rep });
+    setScreen("problem");
+  };
+
+  // Tweaks
+  const defaultTweaks = /*EDITMODE-BEGIN*/{
+    "accent": "teal",
+    "density": "comfortable",
+    "showCoach": true
+  }/*EDITMODE-END*/;
+  const [t, setTweak] = window.useTweaks(defaultTweaks);
+
+  React.useEffect(() => {
+    document.body.classList.toggle("compact", t.density === "compact");
+    const accentColors = {
+      teal:   { c: "oklch(0.55 0.10 200)", ink: "oklch(0.36 0.10 200)", soft: "oklch(0.95 0.022 200)", border: "oklch(0.86 0.045 200)" },
+      indigo: { c: "oklch(0.50 0.13 270)", ink: "oklch(0.34 0.13 270)", soft: "oklch(0.95 0.025 270)", border: "oklch(0.85 0.05 270)" },
+      ember:  { c: "oklch(0.6 0.15 35)",   ink: "oklch(0.42 0.15 35)",  soft: "oklch(0.96 0.03 35)",   border: "oklch(0.86 0.06 35)" },
+      forest: { c: "oklch(0.52 0.11 145)", ink: "oklch(0.35 0.11 145)", soft: "oklch(0.95 0.028 145)", border: "oklch(0.85 0.05 145)" },
+      sumi:   { c: "oklch(0.32 0.005 80)", ink: "oklch(0.22 0.005 80)", soft: "oklch(0.95 0.003 80)",  border: "oklch(0.85 0.005 80)" },
+    };
+    const a = accentColors[t.accent] || accentColors.teal;
+    document.documentElement.style.setProperty("--accent", a.c);
+    document.documentElement.style.setProperty("--accent-ink", a.ink);
+    document.documentElement.style.setProperty("--accent-soft", a.soft);
+    document.documentElement.style.setProperty("--accent-border", a.border);
+  }, [t.accent, t.density]);
+
+  const screens = {
+    dashboard: <Dashboard tasks={tasks} toggleTask={toggleTask} goto={setScreen}/>,
+    today: <Today tasks={tasks} toggleTask={toggleTask} goto={setScreen} openProblem={openProblem}/>,
+    problem: <Problem cardC={problemCtx.cardC} rep={problemCtx.rep} goto={setScreen}/>,
+    cards: <CardSchedule goto={setScreen} openProblem={openProblem}/>,
+    pastexams: <PastExams goto={setScreen}/>,
+    weak: <WeakMap goto={setScreen}/>,
+    weekly: <WeeklyReview goto={setScreen}/>,
+    monthly: <MonthlyReview goto={setScreen}/>,
+  };
+
+  return (
+    <div className="app" data-screen-label={`${screen}`}>
+      <Sidebar current={screen} setCurrent={setScreen}/>
+      <main className="main">
+        {screens[screen]}
+      </main>
+
+      <window.TweaksPanel title="Tweaks">
+        <window.TweakSection label="表示">
+          <window.TweakSelect
+            label="アクセント色"
+            value={t.accent}
+            onChange={(v) => setTweak("accent", v)}
+            options={[
+              { value: "teal", label: "Teal — 標準" },
+              { value: "indigo", label: "Indigo" },
+              { value: "ember", label: "Ember" },
+              { value: "forest", label: "Forest" },
+              { value: "sumi", label: "Sumi (墨)" },
+            ]}
+          />
+          <window.TweakRadio
+            label="密度"
+            value={t.density}
+            onChange={(v) => setTweak("density", v)}
+            options={[
+              { value: "comfortable", label: "標準" },
+              { value: "compact", label: "コンパクト" },
+            ]}
+          />
+        </window.TweakSection>
+
+        <window.TweakSection label="画面ジャンプ">
+          {[
+            ["dashboard", "ダッシュボード"],
+            ["today", "今日のセッション"],
+            ["problem", "問題画面 (A-2)"],
+            ["cards", "A-2カード進行"],
+            ["pastexams", "過去問進捗"],
+            ["weak", "弱点マップ"],
+            ["weekly", "週次レビュー"],
+            ["monthly", "月次レビュー"],
+          ].map(([k, l]) => (
+            <window.TweakButton key={k} label={l + " を開く"} onClick={() => setScreen(k)} secondary={screen !== k}/>
+          ))}
+        </window.TweakSection>
+      </window.TweaksPanel>
+    </div>
+  );
+};
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+
+</script>
+</body>
+</html>
